@@ -95,7 +95,12 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ summary 
                   />
                 ))}
               </Pie>
-              <Tooltip formatter={(value) => `$${value.toFixed(2)}`} />
+              <Tooltip formatter={(value) => {
+                if (typeof value === 'number') {
+                  return `$${value.toFixed(2)}`;
+                }
+                return `$${value}`;
+              }} />
               <Legend />
             </PieChart>
           </ResponsiveContainer>
