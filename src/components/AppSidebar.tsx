@@ -74,8 +74,8 @@ export function AppSidebar() {
     <Sidebar variant="inset" className="border-r">
       <SidebarHeader className="flex items-center justify-between">
         <div className="flex items-center gap-2 pl-2">
-          <div className="h-6 w-6 rounded-md bg-primary"></div>
-          <span className="font-semibold">FlowFinance</span>
+          <div className="h-6 w-6 rounded-md bg-gradient-to-r from-vivid-purple to-ocean-blue"></div>
+          <span className="font-semibold text-gradient">FlowFinance</span>
         </div>
         <SidebarTrigger />
       </SidebarHeader>
@@ -84,8 +84,8 @@ export function AppSidebar() {
           <SidebarGroupLabel>Main</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainNavItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
+              {mainNavItems.map((item, index) => (
+                <SidebarMenuItem key={item.title} className={`animate-slide-down`} style={{ animationDelay: `${index * 0.05}s` }}>
                   <SidebarMenuButton
                     asChild
                     tooltip={item.title}
@@ -97,7 +97,7 @@ export function AppSidebar() {
                         cn("nav-link", isActive && "active")
                       }
                     >
-                      <item.icon />
+                      <item.icon className={location.pathname === item.href ? 'text-primary' : ''} />
                       <span>{item.title}</span>
                     </NavLink>
                   </SidebarMenuButton>
@@ -111,8 +111,8 @@ export function AppSidebar() {
           <SidebarGroupLabel>Finance</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {financeNavItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
+              {financeNavItems.map((item, index) => (
+                <SidebarMenuItem key={item.title} className={`animate-slide-down`} style={{ animationDelay: `${(index + 4) * 0.05}s` }}>
                   <SidebarMenuButton
                     asChild
                     tooltip={item.title}
@@ -124,7 +124,7 @@ export function AppSidebar() {
                         cn("nav-link", isActive && "active")
                       }
                     >
-                      <item.icon />
+                      <item.icon className={location.pathname === item.href ? 'text-primary' : ''} />
                       <span>{item.title}</span>
                     </NavLink>
                   </SidebarMenuButton>

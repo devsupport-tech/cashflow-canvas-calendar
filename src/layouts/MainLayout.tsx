@@ -15,7 +15,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         <Header />
         <div className="flex flex-1">
           <AppSidebar />
-          <main className="flex-1 py-6 px-4 md:px-6">
+          <main className="flex-1 py-6 px-4 md:px-6 animate-fade-in">
             {children}
           </main>
         </div>

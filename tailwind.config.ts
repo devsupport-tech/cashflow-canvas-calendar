@@ -67,7 +67,12 @@ export default {
 					personal: 'hsl(var(--expense-personal))',
 					business: 'hsl(var(--expense-business))'
 				},
-				income: 'hsl(var(--income))'
+				income: 'hsl(var(--income))',
+				// New vibrant colors
+				'vivid-purple': '#8B5CF6',
+				'bright-orange': '#F97316', 
+				'ocean-blue': '#0EA5E9',
+				'soft-purple': '#E5DEFF',
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -99,10 +104,18 @@ export default {
 					from: { transform: 'translateY(-10px)', opacity: '0' },
 					to: { transform: 'translateY(0)', opacity: '1' }
 				},
-				pulse: {
+				'pulse': {
 					'0%, 100%': { opacity: '1' },
 					'50%': { opacity: '0.5' }
-				}
+				},
+				'float': {
+					'0%, 100%': { transform: 'translateY(0)' },
+					'50%': { transform: 'translateY(-5px)' }
+				},
+				'scale-in': {
+					'0%': { transform: 'scale(0.95)', opacity: '0' },
+					'100%': { transform: 'scale(1)', opacity: '1' }
+				},
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
@@ -111,7 +124,9 @@ export default {
 				'fade-out': 'fade-out 0.3s ease-out',
 				'slide-up': 'slide-up 0.4s ease-out',
 				'slide-down': 'slide-down 0.4s ease-out',
-				pulse: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+				'pulse': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+				'float': 'float 3s ease-in-out infinite',
+				'scale-in': 'scale-in 0.3s ease-out',
 			}
 		}
 	},

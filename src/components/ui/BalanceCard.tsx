@@ -30,7 +30,7 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({
   }).format(amount);
 
   return (
-    <Card className={cn("overflow-hidden", className)}>
+    <Card className={cn("overflow-hidden card-hover glass-card animate-scale-in", className)}>
       <CardContent className="p-6">
         <div className="flex justify-between items-start">
           <div>
@@ -50,7 +50,7 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({
               </p>
             )}
           </div>
-          <div className="bg-primary/10 p-2 rounded-lg">
+          <div className="bg-gradient-to-br from-primary to-ocean-blue p-2 rounded-lg animate-float">
             {icon}
           </div>
         </div>

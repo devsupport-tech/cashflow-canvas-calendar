@@ -8,22 +8,23 @@ interface AccountCardProps {
   balance: number;
   icon: React.ReactNode;
   color: string;
+  index: number;
 }
 
-const AccountCard: React.FC<AccountCardProps> = ({ title, balance, icon, color }) => {
+const AccountCard: React.FC<AccountCardProps> = ({ title, balance, icon, color, index }) => {
   const formattedBalance = new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD'
   }).format(balance);
   
   return (
-    <Card>
+    <Card className={`card-hover animate-scale-in glass-card`} style={{ animationDelay: `${index * 0.1}s` }}>
       <CardContent className="p-4 flex items-center justify-between">
         <div>
           <p className="text-sm text-muted-foreground mb-1">{title}</p>
-          <p className="text-xl font-medium">{formattedBalance}</p>
+          <p className={`text-xl font-medium ${balance < 0 ? 'text-destructive' : ''}`}>{formattedBalance}</p>
         </div>
-        <div className={`p-2.5 rounded-lg ${color}`}>
+        <div className={`p-2.5 rounded-lg ${color} animate-float`}>
           {icon}
         </div>
       </CardContent>
@@ -37,25 +38,25 @@ export const AccountsSummary = () => {
       title: 'Cash',
       balance: 12450.55,
       icon: <DollarSign className="h-5 w-5 text-white" />,
-      color: 'bg-green-500'
+      color: 'bg-gradient-to-r from-green-400 to-emerald-500'
     },
     {
       title: 'Checking',
       balance: 8392.12,
       icon: <Wallet className="h-5 w-5 text-white" />,
-      color: 'bg-blue-500'
+      color: 'bg-gradient-to-r from-ocean-blue to-blue-600'
     },
     {
       title: 'Credit Card',
       balance: -1240.33,
       icon: <CreditCard className="h-5 w-5 text-white" />,
-      color: 'bg-red-500'
+      color: 'bg-gradient-to-r from-red-400 to-red-600'
     },
     {
       title: 'Business',
       balance: 24680.45,
       icon: <Building className="h-5 w-5 text-white" />,
-      color: 'bg-purple-500'
+      color: 'bg-gradient-to-r from-vivid-purple to-purple-700'
     }
   ];
   
@@ -68,6 +69,7 @@ export const AccountsSummary = () => {
           balance={account.balance}
           icon={account.icon}
           color={account.color}
+          index={index}
         />
       ))}
     </>
