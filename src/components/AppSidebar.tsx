@@ -9,7 +9,10 @@ import {
   Settings, 
   CreditCard, 
   PiggyBank,
-  Wallet
+  Wallet,
+  FileText,
+  Briefcase,
+  User
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -26,6 +29,8 @@ import {
   SidebarRail,
   SidebarTrigger
 } from '@/components/ui/sidebar';
+import { useWorkspace } from '@/contexts/WorkspaceContext';
+import { WorkspaceSwitcher } from './WorkspaceSwitcher';
 
 // Menu items for the sidebar
 const mainNavItems = [
@@ -48,6 +53,11 @@ const mainNavItems = [
     title: 'Transactions', 
     icon: ListPlus,
     href: '/transactions' 
+  },
+  { 
+    title: 'Documents', 
+    icon: FileText,
+    href: '/documents' 
   }
 ];
 
@@ -70,6 +80,14 @@ const financeNavItems = [
 ];
 
 export function AppSidebar() {
+  const { currentWorkspace } = useWorkspace();
+  
+  const workspaceIcon = currentWorkspace === 'personal' ? (
+    <User className="text-violet-500" />
+  ) : (
+    <Briefcase className="text-blue-500" />
+  );
+
   return (
     <Sidebar variant="inset" className="border-r">
       <SidebarHeader className="flex items-center justify-between">
@@ -79,7 +97,12 @@ export function AppSidebar() {
         </div>
         <SidebarTrigger />
       </SidebarHeader>
+      
       <SidebarContent>
+        <div className="px-3 py-2">
+          <WorkspaceSwitcher />
+        </div>
+        
         <SidebarGroup>
           <SidebarGroupLabel>Main</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -112,7 +135,7 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {financeNavItems.map((item, index) => (
-                <SidebarMenuItem key={item.title} className={`animate-slide-down`} style={{ animationDelay: `${(index + 4) * 0.05}s` }}>
+                <SidebarMenuItem key={item.title} className={`animate-slide-down`} style={{ animationDelay: `${(index + mainNavItems.length) * 0.05}s` }}>
                   <SidebarMenuButton
                     asChild
                     tooltip={item.title}

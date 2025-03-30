@@ -2,6 +2,8 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
+import { useWorkspace } from '@/contexts/WorkspaceContext';
 
 interface BalanceCardProps {
   title: string;
@@ -13,6 +15,7 @@ interface BalanceCardProps {
   };
   className?: string;
   showSign?: boolean;
+  workspace?: boolean;
 }
 
 export const BalanceCard: React.FC<BalanceCardProps> = ({
@@ -21,8 +24,11 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({
   icon,
   trend,
   className,
-  showSign = false
+  showSign = false,
+  workspace = false
 }) => {
+  const { currentWorkspace } = useWorkspace();
+  
   // Format the amount as currency
   const formattedAmount = new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -34,7 +40,20 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({
       <CardContent className="p-6">
         <div className="flex justify-between items-start">
           <div>
-            <h3 className="text-sm font-medium text-muted-foreground mb-1">{title}</h3>
+            <div className="flex items-center gap-2 mb-1">
+              <h3 className="text-sm font-medium text-muted-foreground">{title}</h3>
+              {workspace && (
+                <Badge 
+                  variant="outline" 
+                  className={cn(
+                    "text-xs", 
+                    currentWorkspace === 'personal' ? "bg-violet-500/10 text-violet-500" : "bg-blue-500/10 text-blue-500"
+                  )}
+                >
+                  {currentWorkspace}
+                </Badge>
+              )}
+            </div>
             <p className={cn(
               "text-2xl font-semibold tracking-tight",
               amount < 0 && "text-destructive"
@@ -50,7 +69,12 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({
               </p>
             )}
           </div>
-          <div className="bg-gradient-to-br from-primary to-ocean-blue p-2 rounded-lg animate-float">
+          <div className={cn(
+            "p-2 rounded-lg animate-float",
+            currentWorkspace === 'personal' 
+              ? "bg-gradient-to-br from-violet-500 to-purple-600" 
+              : "bg-gradient-to-br from-blue-500 to-cyan-600"
+          )}>
             {icon}
           </div>
         </div>

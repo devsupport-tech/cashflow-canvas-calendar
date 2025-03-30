@@ -21,6 +21,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Transaction } from '@/lib/types';
 import { CategoryBadge } from './CategoryBadge';
+import { useWorkspace } from '@/contexts/WorkspaceContext';
 
 interface TransactionListProps {
   transactions: Transaction[];
@@ -30,9 +31,15 @@ export const TransactionList: React.FC<TransactionListProps> = ({
   transactions: allTransactions 
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
+  const { currentWorkspace } = useWorkspace();
   
-  // Filter transactions based on search query
-  const filteredTransactions = allTransactions.filter((transaction) => 
+  // First filter by workspace
+  const workspaceTransactions = allTransactions.filter(transaction => 
+    !transaction.category || transaction.category === currentWorkspace
+  );
+  
+  // Then filter by search query
+  const filteredTransactions = workspaceTransactions.filter((transaction) => 
     transaction.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
   
@@ -133,7 +140,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
             </div>
           ) : (
             <div className="py-10 text-center text-muted-foreground">
-              No transactions found
+              No transactions found in {currentWorkspace} workspace
             </div>
           )}
         </TabsContent>
@@ -152,7 +159,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
             </div>
           ) : (
             <div className="py-10 text-center text-muted-foreground">
-              No expenses found
+              No expenses found in {currentWorkspace} workspace
             </div>
           )}
         </TabsContent>
@@ -171,7 +178,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
             </div>
           ) : (
             <div className="py-10 text-center text-muted-foreground">
-              No income found
+              No income found in {currentWorkspace} workspace
             </div>
           )}
         </TabsContent>

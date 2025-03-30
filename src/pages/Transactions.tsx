@@ -14,19 +14,28 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DateRangePicker } from '@/components/DateRangePicker';
 import { DateRange } from 'react-day-picker';
 import { Badge } from '@/components/ui/badge';
+import { WorkspaceSwitcher } from '@/components/WorkspaceSwitcher';
+import { useWorkspace } from '@/contexts/WorkspaceContext';
 
 const Transactions = () => {
   const [formOpen, setFormOpen] = React.useState(false);
   const [importOpen, setImportOpen] = useState(false);
-  const [businessFilter, setBusinessFilter] = useState('all');
+  const [transactionTypeFilter, setTransactionTypeFilter] = useState('all');
   
   // Fix: Adjust the dateRange state to use the proper DateRange type
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   
-  // Filter transactions based on selected filters
+  const { currentWorkspace } = useWorkspace();
+  
+  // Filter transactions based on selected filters and workspace
   const filteredTransactions = dummyTransactions.filter(t => {
-    // Filter by business/personal
-    if (businessFilter !== 'all' && t.category !== businessFilter) {
+    // Filter by workspace
+    if (t.category && t.category !== currentWorkspace) {
+      return false;
+    }
+    
+    // Filter by transaction type (business/personal) - now handled by workspace
+    if (transactionTypeFilter !== 'all' && t.category !== transactionTypeFilter) {
       return false;
     }
     
@@ -51,6 +60,8 @@ const Transactions = () => {
           </div>
           
           <div className="flex flex-wrap items-center gap-2">
+            <WorkspaceSwitcher />
+            
             <Dialog open={formOpen} onOpenChange={setFormOpen}>
               <DialogTrigger asChild>
                 <Button className="gap-1">
@@ -77,42 +88,17 @@ const Transactions = () => {
           <div className="flex flex-wrap gap-4 items-center mb-4">
             <h3 className="text-sm font-medium">Filters</h3>
             
-            <Tabs value={businessFilter} onValueChange={setBusinessFilter} className="border rounded-md">
-              <TabsList className="bg-transparent p-1">
-                <TabsTrigger value="all" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md">
-                  All
-                </TabsTrigger>
-                <TabsTrigger value="personal" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md">
-                  Personal
-                </TabsTrigger>
-                <TabsTrigger value="business" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md">
-                  Business
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-            
             <DateRangePicker
               date={dateRange}
               onDateChange={setDateRange}
             />
             
-            <Badge variant={businessFilter === 'all' ? 'default' : businessFilter === 'business' ? 'secondary' : 'outline'} className="ml-auto">
-              {businessFilter === 'all' ? 'All Transactions' : businessFilter === 'business' ? 'Business' : 'Personal'}
+            <Badge variant="outline" className="ml-auto">
+              {currentWorkspace.charAt(0).toUpperCase() + currentWorkspace.slice(1)} Workspace
             </Badge>
           </div>
           
           <div className="flex flex-wrap items-center gap-3 mt-3">
-            <Select value={businessFilter} onValueChange={setBusinessFilter}>
-              <SelectTrigger className="w-[150px] hidden">
-                <SelectValue placeholder="Type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Transactions</SelectItem>
-                <SelectItem value="personal">Personal</SelectItem>
-                <SelectItem value="business">Business</SelectItem>
-              </SelectContent>
-            </Select>
-            
             <Button variant="ghost" size="sm" className="ml-auto gap-1">
               <Filter className="h-4 w-4" />
               More Filters
