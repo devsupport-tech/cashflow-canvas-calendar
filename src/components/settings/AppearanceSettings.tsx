@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from "@/components/ui/switch";
@@ -7,10 +6,12 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { useToast } from '@/hooks/use-toast';
+import { useColorTheme } from '@/contexts/ColorThemeContext';
 
 export const AppearanceSettings = () => {
   const { currentWorkspace } = useWorkspace();
   const { toast } = useToast();
+  const { colorAccent, setColorAccent } = useColorTheme();
   
   // Theme state
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system');
@@ -23,9 +24,6 @@ export const AppearanceSettings = () => {
   // Dashboard settings
   const [compactView, setCompactView] = useState(false);
   const [showDailySummary, setShowDailySummary] = useState(true);
-  
-  // Color accent
-  const [colorAccent, setColorAccent] = useState('default');
   
   // Handle theme change
   useEffect(() => {
@@ -101,15 +99,7 @@ export const AppearanceSettings = () => {
   };
   
   const handleColorAccentChange = (value: string) => {
-    setColorAccent(value);
-    
-    // In a real implementation, you would apply the selected accent color
-    // to your app's theme system
-    
-    toast({
-      title: "Color accent updated",
-      description: `Color accent set to ${value}`,
-    });
+    setColorAccent(value as 'default' | 'vivid-purple' | 'ocean-blue' | 'bright-orange');
   };
   
   return (

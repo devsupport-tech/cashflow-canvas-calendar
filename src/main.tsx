@@ -21,6 +21,15 @@ const initializeTheme = () => {
     root.classList.add(systemTheme);
     localStorage.setItem('theme', 'system');
   }
+  
+  // Apply color accent from localStorage
+  const savedColorAccent = localStorage.getItem('colorAccent');
+  if (savedColorAccent) {
+    root.classList.add(`theme-${savedColorAccent}`);
+  } else {
+    // Default to 'default' theme
+    root.classList.add('theme-default');
+  }
 };
 
 // Initialize theme before rendering

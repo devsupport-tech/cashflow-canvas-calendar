@@ -70,6 +70,26 @@
     --popover-foreground: 210 40% 98%;
   }
   
+  /* Color accent themes */
+  .theme-vivid-purple {
+    --primary: 265 83% 63%;
+    --ring: 265 83% 63%;
+  }
+  
+  .theme-ocean-blue {
+    --primary: 199 89% 48%;
+    --ring: 199 89% 48%;
+  }
+  
+  .theme-bright-orange {
+    --primary: 24 94% 53%;
+    --ring: 24 94% 53%;
+  }
+  
+  .theme-default {
+    /* Uses the default colors defined above */
+  }
+  
   * {
     @apply border-border;
   }

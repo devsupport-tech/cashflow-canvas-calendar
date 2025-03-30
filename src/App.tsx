@@ -14,30 +14,33 @@ import NotFound from "./pages/NotFound";
 import Accounts from "./pages/Accounts";
 import Budgets from "./pages/Budgets";
 import Expenses from "./pages/Expenses";
+import { ColorThemeProvider } from "./contexts/ColorThemeContext";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/calendar" element={<Calendar />} />
-          <Route path="/analytics" element={<Analytics />} />
-          <Route path="/transactions" element={<Transactions />} />
-          <Route path="/documents" element={<Documents />} />
-          <Route path="/accounts" element={<Accounts />} />
-          <Route path="/budgets" element={<Budgets />} />
-          <Route path="/expenses" element={<Expenses />} />
-          <Route path="/settings" element={<Settings />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <ColorThemeProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/calendar" element={<Calendar />} />
+            <Route path="/analytics" element={<Analytics />} />
+            <Route path="/transactions" element={<Transactions />} />
+            <Route path="/documents" element={<Documents />} />
+            <Route path="/accounts" element={<Accounts />} />
+            <Route path="/budgets" element={<Budgets />} />
+            <Route path="/expenses" element={<Expenses />} />
+            <Route path="/settings" element={<Settings />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </ColorThemeProvider>
   </QueryClientProvider>
 );
 
