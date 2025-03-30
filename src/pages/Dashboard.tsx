@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { MainLayout } from '@/layouts/MainLayout';
 import { AnalyticsDashboard } from '@/components/AnalyticsDashboard';
@@ -13,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { financeSummary, dummyTransactions } from '@/lib/dummyData';
 
 const Dashboard = () => {
-  const [timeFrame, setTimeFrame] = useState('month');
+  const [timeFrame, setTimeFrame] = useState<"month" | "quarter" | "year">("month");
   const [businessView, setBusinessView] = useState('all');
   
   return (
@@ -28,7 +27,7 @@ const Dashboard = () => {
           </div>
           
           <div className="flex flex-wrap items-center gap-3">
-            <Select value={timeFrame} onValueChange={setTimeFrame}>
+            <Select value={timeFrame} onValueChange={(value: "month" | "quarter" | "year") => setTimeFrame(value)}>
               <SelectTrigger className="w-[130px]">
                 <SelectValue placeholder="Time frame" />
               </SelectTrigger>

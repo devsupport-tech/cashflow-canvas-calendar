@@ -4,7 +4,7 @@ import { MainLayout } from '@/layouts/MainLayout';
 import { TransactionList } from '@/components/TransactionList';
 import { dummyTransactions } from '@/lib/dummyData';
 import { Button } from '@/components/ui/button';
-import { Plus, Upload, Download, Filter, Calendar } from 'lucide-react';
+import { Plus, Upload, Download, Filter } from 'lucide-react';
 import { Dialog, DialogTrigger } from '@/components/ui/dialog';
 import { ExpenseForm } from '@/components/ExpenseForm';
 import { ImportTransactions } from '@/components/ImportTransactions';
@@ -12,15 +12,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DateRangePicker } from '@/components/DateRangePicker';
+import { DateRange } from 'react-day-picker';
 
 const Transactions = () => {
   const [formOpen, setFormOpen] = React.useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [businessFilter, setBusinessFilter] = useState('all');
-  const [dateRange, setDateRange] = useState<{from: Date | undefined, to: Date | undefined}>({
-    from: undefined,
-    to: undefined
-  });
+  
+  // Fix: Adjust the dateRange state to use the proper DateRange type
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   
   // Filter transactions based on selected filters
   const filteredTransactions = dummyTransactions.filter(t => {
@@ -30,7 +30,7 @@ const Transactions = () => {
     }
     
     // Filter by date range
-    if (dateRange.from && dateRange.to) {
+    if (dateRange?.from && dateRange?.to) {
       const txDate = new Date(t.date);
       return txDate >= dateRange.from && txDate <= dateRange.to;
     }
