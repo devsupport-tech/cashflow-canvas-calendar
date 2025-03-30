@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { MainLayout } from '@/layouts/MainLayout';
 import { AnalyticsDashboard } from '@/components/AnalyticsDashboard';
@@ -10,10 +11,17 @@ import { Button } from '@/components/ui/button';
 import { Calendar, Download, Filter, Upload } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { financeSummary, dummyTransactions } from '@/lib/dummyData';
+import { Badge } from '@/components/ui/badge';
 
 const Dashboard = () => {
   const [timeFrame, setTimeFrame] = useState<"month" | "quarter" | "year">("month");
   const [businessView, setBusinessView] = useState('all');
+  
+  // Filter transactions based on business view
+  const filteredTransactions = dummyTransactions.filter(transaction => {
+    if (businessView === 'all') return true;
+    return transaction.category === businessView;
+  });
   
   return (
     <MainLayout>
@@ -38,16 +46,19 @@ const Dashboard = () => {
               </SelectContent>
             </Select>
             
-            <Select value={businessView} onValueChange={setBusinessView}>
-              <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="View" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Accounts</SelectItem>
-                <SelectItem value="personal">Personal</SelectItem>
-                <SelectItem value="business">Business</SelectItem>
-              </SelectContent>
-            </Select>
+            <Tabs value={businessView} onValueChange={setBusinessView} className="border rounded-md">
+              <TabsList className="bg-transparent p-1">
+                <TabsTrigger value="all" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md">
+                  All
+                </TabsTrigger>
+                <TabsTrigger value="personal" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md">
+                  Personal
+                </TabsTrigger>
+                <TabsTrigger value="business" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md">
+                  Business
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
             
             <Button variant="outline" size="icon">
               <Calendar className="h-4 w-4" />
@@ -70,8 +81,11 @@ const Dashboard = () => {
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           <Card className="md:col-span-2">
-            <CardHeader className="pb-2">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-base font-medium">Cash Flow</CardTitle>
+              <Badge variant={businessView === 'all' ? 'default' : businessView === 'business' ? 'secondary' : 'outline'}>
+                {businessView === 'all' ? 'All Accounts' : businessView === 'business' ? 'Business' : 'Personal'}
+              </Badge>
             </CardHeader>
             <CardContent>
               <CashFlowChart data={financeSummary.monthlySummary} timeFrame={timeFrame} />
@@ -79,11 +93,14 @@ const Dashboard = () => {
           </Card>
           
           <Card>
-            <CardHeader className="pb-2">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-base font-medium">Recent Transactions</CardTitle>
+              <Button variant="link" size="sm" className="text-primary p-0" onClick={() => window.location.href = '/transactions'}>
+                View All
+              </Button>
             </CardHeader>
             <CardContent>
-              <RecentTransactions transactions={dummyTransactions.slice(0, 5)} />
+              <RecentTransactions transactions={filteredTransactions.slice(0, 5)} />
             </CardContent>
           </Card>
         </div>
