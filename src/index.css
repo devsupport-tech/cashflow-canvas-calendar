@@ -1,211 +1,51 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
-  :root {
-    --background: 210 40% 98%;
-    --foreground: 222 47% 11%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-
-    --primary: 210 100% 50%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222 47% 11%;
-
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
-
-    --accent: 210 40% 96%;
-    --accent-foreground: 222 47% 11%;
-
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 32% 91%;
-    --input: 214.3 32% 91%;
-    --ring: 222 47% 11%;
-
-    --radius: 0.75rem;
-    
-    /* Finance app specific colors */
-    --expense-personal: 340 95% 65%;
-    --expense-business: 245 90% 65%; 
-    --income: 145 65% 50%;
-    
-    /* Sidebar colors */
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 222 47% 11%;
-    --sidebar-primary: 210 100% 50%;
-    --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 210 40% 96%;
-    --sidebar-accent-foreground: 222 47% 11%;
-    --sidebar-border: 214.3 32% 91%;
-    --sidebar-ring: 210 100% 50%;
-  }
-
-  .dark {
-    --background: 222 47% 7%;
-    --foreground: 210 40% 98%;
-
-    --card: 222 47% 10%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222 47% 10%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 100% 50%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
-
-    --accent: 217 33% 17%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217 33% 17%;
-    --input: 217 33% 17%;
-    --ring: 212.7 26.8% 83.9%;
-    
-    /* Finance app specific colors */
-    --expense-personal: 336 80% 60%;
-    --expense-business: 245 70% 60%;
-    --income: 145 60% 45%;
-    
-    /* Sidebar colors */
-    --sidebar-background: 222 47% 10%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 210 100% 50%;
-    --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 217 33% 17%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217 33% 17%;
-    --sidebar-ring: 210 100% 50%;
-  }
-}
-
-@layer base {
   * {
     @apply border-border;
   }
-
   body {
-    @apply bg-background text-foreground antialiased;
-    font-feature-settings: "rlig" 1, "calt" 1;
-  }
-  
-  /* Custom scrollbar */
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-  
-  ::-webkit-scrollbar-track {
-    @apply bg-transparent;
-  }
-  
-  ::-webkit-scrollbar-thumb {
-    @apply bg-muted-foreground/20 rounded-full;
-  }
-  
-  ::-webkit-scrollbar-thumb:hover {
-    @apply bg-muted-foreground/40;
+    @apply bg-background text-foreground;
+    font-feature-settings:
+      "rlig" 1,
+      "calt" 1;
   }
 }
 
 @layer components {
-  .glass-card {
-    @apply bg-white/80 dark:bg-black/50 backdrop-blur-md border border-white/20 dark:border-white/10;
-  }
-  
-  .expense-dot {
-    @apply inline-block rounded-full h-2.5 w-2.5;
-  }
-  
-  .expense-dot-personal {
-    @apply bg-expense-personal;
-  }
-  
-  .expense-dot-business {
-    @apply bg-expense-business;
-  }
-  
-  .calendar-day {
-    @apply relative h-20 min-w-16 p-1 border border-border hover:bg-secondary/50 transition-colors duration-200;
-  }
-  
-  .calendar-day-header {
-    @apply text-xs text-muted-foreground font-medium;
-  }
-  
-  .calendar-day-content {
-    @apply flex flex-col gap-0.5 mt-0.5;
-  }
-  
-  .calendar-day.today {
-    @apply bg-primary/5 border-primary/20;
-  }
-  
-  .calendar-day.outside-month {
-    @apply opacity-40;
-  }
-  
   .nav-link {
-    @apply flex items-center gap-2 px-3 py-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary/80 transition-colors duration-200;
+    @apply flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-secondary/50 data-[active=true]:bg-secondary/50 data-[active=true]:font-medium;
   }
-  
-  .nav-link.active {
-    @apply bg-primary text-primary-foreground;
-  }
-  
-  /* Animations */
-  .animate-in {
-    animation-name: fade-in, slide-up;
-    animation-duration: 400ms, 400ms;
-    animation-timing-function: ease-out, ease-out;
-    animation-fill-mode: both, both;
-  }
-  
-  .animate-out {
-    animation-name: fade-out, slide-down;
-    animation-duration: 200ms, 200ms;
-    animation-timing-function: ease-in, ease-in;
-    animation-fill-mode: both, both;
-  }
-  
-  /* Page transitions */
-  .page-transition-enter {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  
-  .page-transition-enter-active {
-    opacity: 1;
-    transform: translateY(0);
-    transition: opacity 300ms, transform 300ms;
-  }
-  
-  .page-transition-exit {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  
-  .page-transition-exit-active {
-    opacity: 0;
-    transform: translateY(-8px);
-    transition: opacity 200ms, transform 200ms;
-  }
+}
+
+/* Sidebar styles */
+:root {
+  --sidebar-width: 16rem;
+  --sidebar-width-icon: 3rem;
+}
+
+[data-sidebar="sidebar"] {
+  @apply bg-background text-foreground;
+}
+
+[data-sidebar="menu-button"] {
+  @apply text-muted-foreground;
+}
+
+[data-sidebar="menu-button"][data-active="true"] {
+  @apply bg-primary/10 text-primary;
+}
+
+[data-sidebar="menu-button"]:hover {
+  @apply bg-accent text-accent-foreground;
+}
+
+.nav-link {
+  @apply flex items-center gap-2 w-full;
+}
+
+.nav-link.active {
+  @apply font-medium;
 }
