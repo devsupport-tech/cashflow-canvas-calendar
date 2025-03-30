@@ -12,19 +12,11 @@ import {
 } from 'recharts';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useColorTheme } from '@/contexts/ColorThemeContext';
-
-interface DataPoint {
-  name: string;
-  income: number;
-  expenses: {
-    personal: number;
-    business: number;
-  };
-  total: number;
-}
+import { MonthlyTotal } from '@/lib/types';
+import { format } from 'date-fns';
 
 interface CashFlowChartProps {
-  data: DataPoint[];
+  data: MonthlyTotal[];
   timeFrame: "day" | "week" | "month" | "quarter" | "year";
 }
 
@@ -50,8 +42,11 @@ export const CashFlowChart: React.FC<CashFlowChartProps> = ({ data, timeFrame })
         name: days[index],
       }));
     } else {
-      // Return the original monthly data
-      return data;
+      // For month, quarter, year - format the month date
+      return data.map(point => ({
+        ...point,
+        name: format(point.month, 'MMM'),
+      }));
     }
   };
   
