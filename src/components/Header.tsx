@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, BarChart3, ListPlus, Calendar, Menu, X } from 'lucide-react';
+import { LayoutDashboard, BarChart3, ListPlus, Calendar, Menu, X, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -31,6 +31,11 @@ const navItems = [
     name: 'Transactions', 
     icon: <ListPlus className="h-4 w-4" />, 
     href: '/transactions' 
+  },
+  { 
+    name: 'Settings', 
+    icon: <Settings className="h-4 w-4" />, 
+    href: '/settings' 
   }
 ];
 
