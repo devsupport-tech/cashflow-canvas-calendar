@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Calendar, BarChart3, ListPlus, Menu, X } from 'lucide-react';
+import { LayoutDashboard, BarChart3, ListPlus, Calendar, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -13,9 +13,14 @@ import { useIsMobile } from '@/hooks/use-mobile';
 
 const navItems = [
   { 
+    name: 'Dashboard', 
+    icon: <LayoutDashboard className="h-4 w-4" />, 
+    href: '/' 
+  },
+  { 
     name: 'Calendar', 
     icon: <Calendar className="h-4 w-4" />, 
-    href: '/' 
+    href: '/calendar' 
   },
   { 
     name: 'Analytics', 
