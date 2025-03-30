@@ -1,105 +1,167 @@
 
 import React from 'react';
 import {
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
+  ResponsiveContainer,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   Legend,
-  ResponsiveContainer,
-  ComposedChart,
-  Area
 } from 'recharts';
-import { MonthlyTotal } from '@/lib/types';
-import { cn } from '@/lib/utils';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { format, subMonths, startOfQuarter, endOfQuarter, subQuarters, getYear, subYears } from 'date-fns';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { useColorTheme } from '@/contexts/ColorThemeContext';
+
+interface DataPoint {
+  name: string;
+  income: number;
+  expenses: {
+    personal: number;
+    business: number;
+  };
+  total: number;
+}
 
 interface CashFlowChartProps {
-  data: MonthlyTotal[];
-  timeFrame: 'month' | 'quarter' | 'year';
+  data: DataPoint[];
+  timeFrame: "day" | "week" | "month" | "quarter" | "year";
 }
 
 export const CashFlowChart: React.FC<CashFlowChartProps> = ({ data, timeFrame }) => {
-  const isMobile = useIsMobile();
+  const { colorAccent } = useColorTheme();
   
-  // Process data based on timeFrame
-  const processedData = React.useMemo(() => {
-    if (timeFrame === 'month') {
-      // Use monthly data as is
-      return data.slice(-6).map(month => ({
-        name: format(month.month, 'MMM'),
-        income: month.income,
-        expenses: month.expenses.personal + month.expenses.business,
-        balance: month.total
+  // Format the data based on the timeFrame
+  const getFormattedData = () => {
+    // For demonstration, we'll use the existing data but format it differently
+    // In a real app, you would fetch different data based on the timeFrame
+    
+    if (timeFrame === 'day') {
+      // Return hourly data for a day
+      return data.slice(0, 24).map((point, index) => ({
+        ...point,
+        name: `${index}:00`,
       }));
-    } else if (timeFrame === 'quarter') {
-      // Group by quarter
-      const quarterData: Record<string, { income: number; expenses: number; balance: number }> = {};
-      
-      data.forEach(month => {
-        const quarterKey = `${getYear(month.month)}-Q${Math.floor(month.month.getMonth() / 3) + 1}`;
-        
-        if (!quarterData[quarterKey]) {
-          quarterData[quarterKey] = { income: 0, expenses: 0, balance: 0 };
-        }
-        
-        quarterData[quarterKey].income += month.income;
-        quarterData[quarterKey].expenses += month.expenses.personal + month.expenses.business;
-        quarterData[quarterKey].balance += month.total;
-      });
-      
-      return Object.entries(quarterData).slice(-4).map(([key, value]) => ({
-        name: key.split('-')[1],
-        income: value.income,
-        expenses: value.expenses,
-        balance: value.balance
+    } else if (timeFrame === 'week') {
+      // Return daily data for a week
+      const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      return data.slice(0, 7).map((point, index) => ({
+        ...point,
+        name: days[index],
       }));
     } else {
-      // Group by year
-      const yearData: Record<string, { income: number; expenses: number; balance: number }> = {};
-      
-      data.forEach(month => {
-        const yearKey = `${getYear(month.month)}`;
-        
-        if (!yearData[yearKey]) {
-          yearData[yearKey] = { income: 0, expenses: 0, balance: 0 };
-        }
-        
-        yearData[yearKey].income += month.income;
-        yearData[yearKey].expenses += month.expenses.personal + month.expenses.business;
-        yearData[yearKey].balance += month.total;
-      });
-      
-      return Object.entries(yearData).slice(-3).map(([key, value]) => ({
-        name: key,
-        income: value.income,
-        expenses: value.expenses,
-        balance: value.balance
-      }));
+      // Return the original monthly data
+      return data;
     }
-  }, [data, timeFrame]);
+  };
+  
+  const formattedData = getFormattedData();
+  
+  // Get colors based on the theme
+  const getThemeColors = () => {
+    switch(colorAccent) {
+      case 'vivid-purple':
+        return {
+          income: '#9333EA',
+          personalExpense: '#FF8A65',
+          businessExpense: '#7C3AED'
+        };
+      case 'ocean-blue':
+        return {
+          income: '#06B6D4',
+          personalExpense: '#FF8A65',
+          businessExpense: '#0284C7'
+        };
+      case 'bright-orange':
+        return {
+          income: '#F97316',
+          personalExpense: '#EA580C',
+          businessExpense: '#0284C7'
+        };
+      default:
+        return {
+          income: 'var(--income)',
+          personalExpense: 'var(--expense-personal)',
+          businessExpense: 'var(--expense-business)'
+        };
+    }
+  };
+  
+  const themeColors = getThemeColors();
+  
+  const formatYAxis = (value: number) => {
+    if (value >= 1000) {
+      return `$${(value / 1000).toFixed(0)}K`;
+    }
+    return `$${value}`;
+  };
   
   return (
-    <div className="h-[300px]">
+    <div className="h-[300px] w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <ComposedChart data={processedData} margin={{ top: 10, right: 10, left: isMobile ? 0 : 20, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-          <XAxis dataKey="name" />
-          <YAxis tickFormatter={(value) => `$${value > 999 ? `${(value / 1000).toFixed(1)}k` : value}`} />
+        <AreaChart data={formattedData}>
+          <defs>
+            <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor={themeColors.income} stopOpacity={0.8}/>
+              <stop offset="95%" stopColor={themeColors.income} stopOpacity={0}/>
+            </linearGradient>
+            <linearGradient id="colorPersonalExpense" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor={themeColors.personalExpense} stopOpacity={0.8}/>
+              <stop offset="95%" stopColor={themeColors.personalExpense} stopOpacity={0}/>
+            </linearGradient>
+            <linearGradient id="colorBusinessExpense" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor={themeColors.businessExpense} stopOpacity={0.8}/>
+              <stop offset="95%" stopColor={themeColors.businessExpense} stopOpacity={0}/>
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
+          <XAxis 
+            dataKey="name" 
+            tick={{ fontSize: 12 }} 
+            tickLine={false}
+            axisLine={{ stroke: '#E5E7EB', strokeWidth: 0.5 }}
+          />
+          <YAxis 
+            tickFormatter={formatYAxis}
+            tick={{ fontSize: 12 }} 
+            tickLine={false}
+            axisLine={{ stroke: '#E5E7EB', strokeWidth: 0.5 }}
+          />
           <Tooltip 
             formatter={(value: number) => [`$${value.toFixed(2)}`, '']}
-            labelFormatter={(label) => `Period: ${label}`}
+            contentStyle={{ 
+              backgroundColor: 'var(--background)',
+              borderColor: 'var(--border)',
+              borderRadius: '0.5rem',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+            }}
           />
           <Legend />
-          <Bar dataKey="income" name="Income" fill="hsl(var(--income))" barSize={20} />
-          <Bar dataKey="expenses" name="Expenses" fill="hsl(var(--destructive))" barSize={20} />
-          <Line type="monotone" dataKey="balance" name="Net" stroke="hsl(var(--primary))" strokeWidth={2} />
-        </ComposedChart>
+          <Area 
+            type="monotone" 
+            dataKey="income" 
+            name="Income"
+            stroke={themeColors.income} 
+            fillOpacity={1} 
+            fill="url(#colorIncome)" 
+          />
+          <Area 
+            type="monotone" 
+            dataKey="expenses.personal" 
+            name="Personal Expenses"
+            stroke={themeColors.personalExpense} 
+            fillOpacity={1} 
+            fill="url(#colorPersonalExpense)" 
+          />
+          <Area 
+            type="monotone" 
+            dataKey="expenses.business" 
+            name="Business Expenses"
+            stroke={themeColors.businessExpense} 
+            fillOpacity={1} 
+            fill="url(#colorBusinessExpense)" 
+          />
+        </AreaChart>
       </ResponsiveContainer>
     </div>
   );

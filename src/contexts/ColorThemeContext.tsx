@@ -46,7 +46,7 @@ export const ColorThemeProvider = ({ children }: { children: React.ReactNode }) 
     
     toast({
       title: "Color accent updated",
-      description: `Color accent set to ${accent}`,
+      description: `Color accent set to ${accent.replace('-', ' ')}`,
     });
   };
 

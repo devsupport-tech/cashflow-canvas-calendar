@@ -126,6 +126,22 @@
   .animate-hover {
     @apply transition-transform duration-200 hover:scale-105;
   }
+  
+  /* Theme-specific buttons */
+  .theme-vivid-purple button[class*="bg-primary"],
+  .theme-vivid-purple .bg-primary {
+    @apply bg-[#9333EA] hover:bg-[#8B5CF6]/90;
+  }
+  
+  .theme-ocean-blue button[class*="bg-primary"],
+  .theme-ocean-blue .bg-primary {
+    @apply bg-[#0EA5E9] hover:bg-[#0284C7]/90;
+  }
+  
+  .theme-bright-orange button[class*="bg-primary"],
+  .theme-bright-orange .bg-primary {
+    @apply bg-[#F97316] hover:bg-[#EA580C]/90;
+  }
 }
 
 /* Sidebar styles */
