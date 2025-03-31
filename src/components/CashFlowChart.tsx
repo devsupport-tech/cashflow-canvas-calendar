@@ -9,11 +9,12 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
+  ReferenceLine,
 } from 'recharts';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useColorTheme } from '@/contexts/ColorThemeContext';
 import { MonthlyTotal } from '@/lib/types';
-import { format } from 'date-fns';
+import { format, isFuture, isToday } from 'date-fns';
 
 interface CashFlowChartProps {
   data: MonthlyTotal[];
@@ -33,6 +34,7 @@ export const CashFlowChart: React.FC<CashFlowChartProps> = ({ data, timeFrame })
       return data.slice(0, 24).map((point, index) => ({
         ...point,
         name: `${index}:00`,
+        isFuture: index > new Date().getHours()
       }));
     } else if (timeFrame === 'week') {
       // Return daily data for a week
@@ -40,17 +42,22 @@ export const CashFlowChart: React.FC<CashFlowChartProps> = ({ data, timeFrame })
       return data.slice(0, 7).map((point, index) => ({
         ...point,
         name: days[index],
+        isFuture: index >= new Date().getDay()
       }));
     } else {
       // For month, quarter, year - format the month date
       return data.map(point => ({
         ...point,
         name: format(point.month, 'MMM'),
+        isFuture: isFuture(point.month) || isToday(point.month)
       }));
     }
   };
   
   const formattedData = getFormattedData();
+  
+  // Find the index where future data starts
+  const todayIndex = formattedData.findIndex(item => item.isFuture);
   
   // Get colors based on the theme
   const getThemeColors = () => {
@@ -59,25 +66,29 @@ export const CashFlowChart: React.FC<CashFlowChartProps> = ({ data, timeFrame })
         return {
           income: '#9333EA',
           personalExpense: '#FF8A65',
-          businessExpense: '#7C3AED'
+          businessExpense: '#7C3AED',
+          future: '#E9D5FF'
         };
       case 'ocean-blue':
         return {
           income: '#06B6D4',
           personalExpense: '#FF8A65',
-          businessExpense: '#0284C7'
+          businessExpense: '#0284C7',
+          future: '#BAE6FD'
         };
       case 'bright-orange':
         return {
           income: '#F97316',
           personalExpense: '#EA580C',
-          businessExpense: '#0284C7'
+          businessExpense: '#0284C7',
+          future: '#FFEDD5'
         };
       default:
         return {
           income: 'var(--income)',
           personalExpense: 'var(--expense-personal)',
-          businessExpense: 'var(--expense-business)'
+          businessExpense: 'var(--expense-business)',
+          future: 'var(--accent)'
         };
     }
   };
@@ -108,6 +119,9 @@ export const CashFlowChart: React.FC<CashFlowChartProps> = ({ data, timeFrame })
               <stop offset="5%" stopColor={themeColors.businessExpense} stopOpacity={0.8}/>
               <stop offset="95%" stopColor={themeColors.businessExpense} stopOpacity={0}/>
             </linearGradient>
+            <pattern id="patternFuture" x="0" y="0" width="4" height="4" patternUnits="userSpaceOnUse">
+              <path d="M-1,1 l2,-2 M0,4 l4,-4 M3,5 l2,-2" stroke={themeColors.future} strokeWidth="1"/>
+            </pattern>
           </defs>
           <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
           <XAxis 
@@ -122,6 +136,20 @@ export const CashFlowChart: React.FC<CashFlowChartProps> = ({ data, timeFrame })
             tickLine={false}
             axisLine={{ stroke: '#E5E7EB', strokeWidth: 0.5 }}
           />
+          {todayIndex > 0 && (
+            <ReferenceLine 
+              x={formattedData[todayIndex].name} 
+              stroke={themeColors.future} 
+              strokeWidth={2}
+              strokeDasharray="3 3"
+              label={{ 
+                value: 'Now', 
+                position: 'top', 
+                fill: themeColors.future,
+                fontSize: 12 
+              }} 
+            />
+          )}
           <Tooltip 
             formatter={(value: number) => [`$${value.toFixed(2)}`, '']}
             contentStyle={{ 
@@ -129,6 +157,10 @@ export const CashFlowChart: React.FC<CashFlowChartProps> = ({ data, timeFrame })
               borderColor: 'var(--border)',
               borderRadius: '0.5rem',
               boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+            }}
+            labelFormatter={(label, items) => {
+              const dataItem = formattedData.find(item => item.name === label);
+              return `${label}${dataItem?.isFuture ? ' (Projected)' : ''}`;
             }}
           />
           <Legend />
@@ -139,6 +171,7 @@ export const CashFlowChart: React.FC<CashFlowChartProps> = ({ data, timeFrame })
             stroke={themeColors.income} 
             fillOpacity={1} 
             fill="url(#colorIncome)" 
+            strokeDasharray={(point: any) => point.isFuture ? "3 3" : "0"} 
           />
           <Area 
             type="monotone" 
@@ -147,6 +180,7 @@ export const CashFlowChart: React.FC<CashFlowChartProps> = ({ data, timeFrame })
             stroke={themeColors.personalExpense} 
             fillOpacity={1} 
             fill="url(#colorPersonalExpense)" 
+            strokeDasharray={(point: any) => point.isFuture ? "3 3" : "0"}
           />
           <Area 
             type="monotone" 
@@ -155,6 +189,7 @@ export const CashFlowChart: React.FC<CashFlowChartProps> = ({ data, timeFrame })
             stroke={themeColors.businessExpense} 
             fillOpacity={1} 
             fill="url(#colorBusinessExpense)" 
+            strokeDasharray={(point: any) => point.isFuture ? "3 3" : "0"}
           />
         </AreaChart>
       </ResponsiveContainer>

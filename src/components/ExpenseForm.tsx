@@ -19,20 +19,30 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
-import { ExpenseCategory, ExpenseType } from '@/lib/types';
+import { ExpenseCategory, ExpenseType, TransactionType } from '@/lib/types';
 import { toast } from '@/components/ui/use-toast';
 
 interface ExpenseFormProps {
   onClose: () => void;
+  initialDate?: Date;
 }
 
-export const ExpenseForm: React.FC<ExpenseFormProps> = ({ onClose }) => {
-  const [date, setDate] = useState<Date>(new Date());
+export const ExpenseForm: React.FC<ExpenseFormProps> = ({ 
+  onClose,
+  initialDate
+}) => {
+  const [date, setDate] = useState<Date>(initialDate || new Date());
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState<ExpenseCategory>('personal');
   const [expenseType, setExpenseType] = useState<ExpenseType>('food');
+  const [transactionType, setTransactionType] = useState<TransactionType>('expense');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,19 +58,20 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ onClose }) => {
     }
     
     // Process submission
-    const expenseData = {
+    const transactionData = {
       description,
       amount: parseFloat(amount),
       date,
-      category,
-      expenseType,
+      type: transactionType,
+      category: transactionType === 'expense' ? category : undefined,
+      expenseType: transactionType === 'expense' ? expenseType : undefined,
     };
     
-    console.log('Expense data:', expenseData);
+    console.log('Transaction data:', transactionData);
     
     // Show success message
     toast({
-      title: "Expense added",
+      title: transactionType === 'expense' ? "Expense added" : "Income added",
       description: `${description} ($${amount}) was added successfully.`,
     });
     
@@ -87,16 +98,30 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ onClose }) => {
   return (
     <DialogContent className="sm:max-w-[425px] animate-in slide-up">
       <DialogHeader>
-        <DialogTitle>Add Expense</DialogTitle>
+        <DialogTitle>
+          {transactionType === 'expense' ? 'Add Expense' : 'Add Income'}
+        </DialogTitle>
       </DialogHeader>
-      <form onSubmit={handleSubmit} className="space-y-4 pt-4">
+      
+      <Tabs 
+        value={transactionType} 
+        onValueChange={(value) => setTransactionType(value as TransactionType)}
+        className="w-full mb-4"
+      >
+        <TabsList className="w-full">
+          <TabsTrigger value="expense" className="flex-1">Expense</TabsTrigger>
+          <TabsTrigger value="income" className="flex-1">Income</TabsTrigger>
+        </TabsList>
+      </Tabs>
+      
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="description">Description</Label>
           <Input
             id="description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Enter expense description"
+            placeholder="Enter description"
             required
           />
         </div>
@@ -141,46 +166,50 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ onClose }) => {
           </Popover>
         </div>
         
-        <div className="space-y-2">
-          <Label htmlFor="category">Category</Label>
-          <Select
-            value={category}
-            onValueChange={(value) => setCategory(value as ExpenseCategory)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="personal">Personal</SelectItem>
-              <SelectItem value="business">Business</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="expenseType">Expense Type</Label>
-          <Select
-            value={expenseType}
-            onValueChange={(value) => setExpenseType(value as ExpenseType)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select type" />
-            </SelectTrigger>
-            <SelectContent>
-              {expenseTypes.map((type) => (
-                <SelectItem key={type} value={type}>
-                  {type.charAt(0).toUpperCase() + type.slice(1)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        {transactionType === 'expense' && (
+          <>
+            <div className="space-y-2">
+              <Label htmlFor="category">Category</Label>
+              <Select
+                value={category}
+                onValueChange={(value) => setCategory(value as ExpenseCategory)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="personal">Personal</SelectItem>
+                  <SelectItem value="business">Business</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="expenseType">Expense Type</Label>
+              <Select
+                value={expenseType}
+                onValueChange={(value) => setExpenseType(value as ExpenseType)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {expenseTypes.map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {type.charAt(0).toUpperCase() + type.slice(1)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </>
+        )}
         
         <div className="flex justify-end space-x-2 pt-4">
           <Button variant="outline" type="button" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="submit">Save Expense</Button>
+          <Button type="submit">Save</Button>
         </div>
       </form>
     </DialogContent>
