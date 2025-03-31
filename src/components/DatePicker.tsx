@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { useColorTheme } from "@/contexts/ColorThemeContext";
+import { DayProps } from "react-day-picker";
 
 interface DatePickerProps {
   date: Date | undefined;
@@ -26,11 +27,13 @@ export function DatePicker({
   const highlightDatesISO = highlightDates.map(d => d.toISOString().split('T')[0]);
   
   // Custom day rendering to highlight dates with transactions
-  const dayRenderer = (day: Date, modifiers: any) => {
+  const dayRenderer = (props: DayProps) => {
+    const { date: day, ...dayProps } = props;
     const isHighlighted = highlightDatesISO.includes(day.toISOString().split('T')[0]);
     
     return (
       <div
+        {...dayProps}
         className={cn(
           "h-9 w-9 p-0 font-normal aria-selected:opacity-100",
           isHighlighted && "relative",
