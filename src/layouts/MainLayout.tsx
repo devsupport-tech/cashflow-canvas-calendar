@@ -29,12 +29,14 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
             </main>
           </div>
           
-          <style jsx="true">{`
-            @keyframes fadeIn {
-              from { opacity: 0.7; transform: translateY(10px); }
-              to { opacity: 1; transform: translateY(0); }
-            }
-          `}</style>
+          <style>
+            {`
+              @keyframes fadeIn {
+                from { opacity: 0.7; transform: translateY(10px); }
+                to { opacity: 1; transform: translateY(0); }
+              }
+            `}
+          </style>
         </div>
       </SidebarProvider>
     </WorkspaceProvider>
