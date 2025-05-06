@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { LayoutDashboard, BarChart3, ListPlus, Calendar, Menu, X, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { WorkspaceSwitcher } from './WorkspaceSwitcher';
 
 const navItems = [
   { 
@@ -42,30 +43,42 @@ const navItems = [
 export const Header: React.FC = () => {
   const isMobile = useIsMobile();
   const [sheetOpen, setSheetOpen] = React.useState(false);
+  const location = useLocation();
 
   const NavItems = () => (
     <>
-      {navItems.map((item) => (
-        <NavLink
-          key={item.href}
-          to={item.href}
-          onClick={() => setSheetOpen(false)}
-          className={({ isActive }) =>
-            cn("nav-link", isActive && "active")
-          }
-        >
-          {item.icon}
-          <span>{item.name}</span>
-        </NavLink>
-      ))}
+      {navItems.map((item) => {
+        const isActive = location.pathname === item.href;
+        return (
+          <NavLink
+            key={item.href}
+            to={item.href}
+            onClick={() => setSheetOpen(false)}
+            className={({ isActive }) =>
+              cn(
+                "flex items-center gap-2 px-4 py-2 rounded-md transition-colors", 
+                isActive 
+                  ? "bg-primary/10 text-primary font-medium" 
+                  : "hover:bg-accent/50"
+              )
+            }
+          >
+            {React.cloneElement(item.icon, { 
+              className: cn("h-4 w-4", isActive ? "text-primary" : "") 
+            })}
+            <span>{item.name}</span>
+          </NavLink>
+        );
+      })}
     </>
   );
 
   return (
-    <header className="sticky top-0 z-50 w-full backdrop-blur-md bg-background/80 border-b border-border transition-all duration-200 animate-in">
+    <header className="sticky top-0 z-50 w-full backdrop-blur-md bg-background/80 border-b border-border transition-all duration-200">
       <div className="container h-14 flex items-center justify-between">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4">
           <h1 className="font-medium text-lg">FlowFinance</h1>
+          {!isMobile && <WorkspaceSwitcher />}
         </div>
 
         {isMobile ? (
@@ -76,7 +89,10 @@ export const Header: React.FC = () => {
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-64 pt-10">
-              <nav className="flex flex-col gap-1 mt-8">
+              <div className="mb-8">
+                <WorkspaceSwitcher />
+              </div>
+              <nav className="flex flex-col gap-1">
                 <NavItems />
               </nav>
             </SheetContent>
