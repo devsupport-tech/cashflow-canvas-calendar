@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import { format } from "date-fns"
 import { Calendar as CalendarIcon } from "lucide-react"
@@ -16,12 +17,16 @@ interface DateRangePickerProps {
   date: DateRange | undefined;
   onDateChange: (date: DateRange | undefined) => void;
   className?: string;
+  align?: "start" | "center" | "end";
+  buttonClassName?: string;
 }
 
 export function DatePickerWithRange({
   date,
   onDateChange,
   className,
+  align = "start",
+  buttonClassName,
 }: DateRangePickerProps) {
   return (
     <div className={cn("grid gap-2", className)}>
@@ -32,7 +37,8 @@ export function DatePickerWithRange({
             variant={"outline"}
             className={cn(
               "w-[240px] justify-start text-left font-normal",
-              !date && "text-muted-foreground"
+              !date && "text-muted-foreground",
+              buttonClassName
             )}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
@@ -50,7 +56,7 @@ export function DatePickerWithRange({
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
+        <PopoverContent className="w-auto p-0" align={align}>
           <Calendar
             initialFocus
             mode="range"
