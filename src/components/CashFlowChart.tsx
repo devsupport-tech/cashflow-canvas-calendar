@@ -171,7 +171,11 @@ export const CashFlowChart: React.FC<CashFlowChartProps> = ({ data, timeFrame })
             stroke={themeColors.income} 
             fillOpacity={1} 
             fill="url(#colorIncome)" 
-            strokeDasharray={(point: any) => point.isFuture ? "3 3" : "0"} 
+            strokeDasharray={undefined}
+            className={point => point.isFuture ? "future-dashed" : ""}
+            style={{
+              "--future-stroke": `${themeColors.income}`,
+            } as React.CSSProperties}
           />
           <Area 
             type="monotone" 
@@ -180,7 +184,11 @@ export const CashFlowChart: React.FC<CashFlowChartProps> = ({ data, timeFrame })
             stroke={themeColors.personalExpense} 
             fillOpacity={1} 
             fill="url(#colorPersonalExpense)" 
-            strokeDasharray={(point: any) => point.isFuture ? "3 3" : "0"}
+            strokeDasharray={undefined}
+            className={point => point.isFuture ? "future-dashed" : ""}
+            style={{
+              "--future-stroke": `${themeColors.personalExpense}`,
+            } as React.CSSProperties}
           />
           <Area 
             type="monotone" 
@@ -189,7 +197,11 @@ export const CashFlowChart: React.FC<CashFlowChartProps> = ({ data, timeFrame })
             stroke={themeColors.businessExpense} 
             fillOpacity={1} 
             fill="url(#colorBusinessExpense)" 
-            strokeDasharray={(point: any) => point.isFuture ? "3 3" : "0"}
+            strokeDasharray={undefined}
+            className={point => point.isFuture ? "future-dashed" : ""}
+            style={{
+              "--future-stroke": `${themeColors.businessExpense}`,
+            } as React.CSSProperties}
           />
         </AreaChart>
       </ResponsiveContainer>
