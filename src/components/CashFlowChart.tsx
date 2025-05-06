@@ -102,8 +102,16 @@ export const CashFlowChart: React.FC<CashFlowChartProps> = ({ data, timeFrame })
     return `$${value}`;
   };
   
+  // Create CSS for the dashed lines for future data
+  const futureDataStyles = `
+    .future-income-dashed { stroke-dasharray: 3 3; }
+    .future-personal-dashed { stroke-dasharray: 3 3; }
+    .future-business-dashed { stroke-dasharray: 3 3; }
+  `;
+  
   return (
     <div className="h-[300px] w-full">
+      <style>{futureDataStyles}</style>
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={formattedData}>
           <defs>
@@ -172,10 +180,7 @@ export const CashFlowChart: React.FC<CashFlowChartProps> = ({ data, timeFrame })
             fillOpacity={1} 
             fill="url(#colorIncome)" 
             strokeDasharray={undefined}
-            className={point => point.isFuture ? "future-dashed" : ""}
-            style={{
-              "--future-stroke": `${themeColors.income}`,
-            } as React.CSSProperties}
+            className="income-area"
           />
           <Area 
             type="monotone" 
@@ -185,10 +190,7 @@ export const CashFlowChart: React.FC<CashFlowChartProps> = ({ data, timeFrame })
             fillOpacity={1} 
             fill="url(#colorPersonalExpense)" 
             strokeDasharray={undefined}
-            className={point => point.isFuture ? "future-dashed" : ""}
-            style={{
-              "--future-stroke": `${themeColors.personalExpense}`,
-            } as React.CSSProperties}
+            className="personal-expense-area"
           />
           <Area 
             type="monotone" 
@@ -198,10 +200,7 @@ export const CashFlowChart: React.FC<CashFlowChartProps> = ({ data, timeFrame })
             fillOpacity={1} 
             fill="url(#colorBusinessExpense)" 
             strokeDasharray={undefined}
-            className={point => point.isFuture ? "future-dashed" : ""}
-            style={{
-              "--future-stroke": `${themeColors.businessExpense}`,
-            } as React.CSSProperties}
+            className="business-expense-area"
           />
         </AreaChart>
       </ResponsiveContainer>
