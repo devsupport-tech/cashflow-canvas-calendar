@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { 
   LayoutDashboard, 
@@ -12,7 +12,8 @@ import {
   Wallet,
   FileText,
   Briefcase,
-  User
+  User,
+  ChevronDown
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -31,6 +32,13 @@ import {
 } from '@/components/ui/sidebar';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { WorkspaceSwitcher } from './WorkspaceSwitcher';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from '@/components/ui/dropdown-menu';
+import { Button } from './ui/button';
 
 // Menu items for the sidebar
 const mainNavItems = [
@@ -80,13 +88,25 @@ const financeNavItems = [
 ];
 
 export function AppSidebar() {
-  const { currentWorkspace } = useWorkspace();
+  const { currentWorkspace, setWorkspace } = useWorkspace();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   
-  const workspaceIcon = currentWorkspace === 'personal' ? (
-    <User className="text-violet-500" />
-  ) : (
-    <Briefcase className="text-blue-500" />
-  );
+  // Display text for the workspace selector
+  const workspaceDisplay = currentWorkspace === 'all' 
+    ? 'All' 
+    : currentWorkspace.charAt(0).toUpperCase() + currentWorkspace.slice(1);
+  
+  // Icon based on selected workspace
+  const workspaceIcon = () => {
+    switch(currentWorkspace) {
+      case 'personal':
+        return <User className="text-violet-500" />;
+      case 'business':
+        return <Briefcase className="text-blue-500" />;
+      default:
+        return <User className="text-primary" />;
+    }
+  };
 
   return (
     <Sidebar variant="inset" className="border-r">
@@ -100,7 +120,41 @@ export function AppSidebar() {
       
       <SidebarContent>
         <div className="px-3 py-2">
-          <WorkspaceSwitcher />
+          <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                className="w-full justify-start gap-2 font-normal"
+              >
+                {workspaceIcon()}
+                <span>{workspaceDisplay}</span>
+                <ChevronDown className="ml-auto h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-56">
+              <DropdownMenuItem 
+                onClick={() => setWorkspace('all')}
+                className={cn("cursor-pointer", currentWorkspace === 'all' && "bg-accent")}
+              >
+                <User className="mr-2 h-4 w-4 text-primary" />
+                All
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => setWorkspace('personal')}
+                className={cn("cursor-pointer", currentWorkspace === 'personal' && "bg-accent")}
+              >
+                <User className="mr-2 h-4 w-4 text-violet-500" />
+                Personal
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => setWorkspace('business')}
+                className={cn("cursor-pointer", currentWorkspace === 'business' && "bg-accent")}
+              >
+                <Briefcase className="mr-2 h-4 w-4 text-blue-500" />
+                Business
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
         
         <SidebarGroup>

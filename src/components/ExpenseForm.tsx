@@ -6,6 +6,9 @@ import { ExpenseFormHeader } from './expense-form/ExpenseFormHeader';
 import { BasicFormFields } from './expense-form/BasicFormFields';
 import { ExpenseTypeFields } from './expense-form/ExpenseTypeFields';
 import { FormActions } from './expense-form/FormActions';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ExpenseCategory } from '@/lib/types';
 
 interface ExpenseFormProps {
   onClose: () => void;
@@ -49,6 +52,24 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
           setDate={setDate}
         />
         
+        {/* Always show category selection for both expense and income */}
+        <div className="space-y-2">
+          <Label htmlFor="category">Category</Label>
+          <Select
+            value={category}
+            onValueChange={(value) => setCategory(value as ExpenseCategory)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="personal">Personal</SelectItem>
+              <SelectItem value="business">Business</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        {/* Only show expense type for expenses */}
         {transactionType === 'expense' && (
           <ExpenseTypeFields 
             category={category}

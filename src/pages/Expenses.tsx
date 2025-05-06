@@ -69,8 +69,8 @@ const Expenses = () => {
   
   // Filter expenses based on selected workspace and expense type
   const filteredExpenses = expenses.filter(expense => {
-    // Filter by workspace
-    if (expense.category !== currentWorkspace) {
+    // Filter by workspace (show all if 'all' is selected)
+    if (currentWorkspace !== 'all' && expense.category !== currentWorkspace) {
       return false;
     }
     
@@ -84,6 +84,11 @@ const Expenses = () => {
   
   // Calculate total expenses
   const totalAmount = filteredExpenses.reduce((total, expense) => total + expense.amount, 0);
+  
+  // Get workspace display text
+  const workspaceDisplay = currentWorkspace === 'all' 
+    ? 'All' 
+    : currentWorkspace.charAt(0).toUpperCase() + currentWorkspace.slice(1);
   
   return (
     <MainLayout>
@@ -127,7 +132,7 @@ const Expenses = () => {
                 Expense Summary
               </CardTitle>
               <CardDescription>
-                Total Expenses: <span className="font-semibold">${totalAmount.toFixed(2)}</span>
+                Total Expenses ({workspaceDisplay}): <span className="font-semibold">${totalAmount.toFixed(2)}</span>
               </CardDescription>
             </CardHeader>
           </Card>

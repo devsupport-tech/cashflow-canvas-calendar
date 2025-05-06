@@ -1,12 +1,11 @@
 
 import React from 'react';
-import { DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TransactionType } from '@/lib/types';
 
 interface ExpenseFormHeaderProps {
   transactionType: TransactionType;
-  onTransactionTypeChange: (value: TransactionType) => void;
+  onTransactionTypeChange: (type: TransactionType) => void;
 }
 
 export const ExpenseFormHeader: React.FC<ExpenseFormHeaderProps> = ({
@@ -14,23 +13,16 @@ export const ExpenseFormHeader: React.FC<ExpenseFormHeaderProps> = ({
   onTransactionTypeChange
 }) => {
   return (
-    <>
-      <DialogHeader>
-        <DialogTitle>
-          {transactionType === 'expense' ? 'Add Expense' : 'Add Income'}
-        </DialogTitle>
-      </DialogHeader>
-      
-      <Tabs 
-        value={transactionType} 
-        onValueChange={(value) => onTransactionTypeChange(value as TransactionType)}
-        className="w-full mb-4"
-      >
-        <TabsList className="w-full">
-          <TabsTrigger value="expense" className="flex-1">Expense</TabsTrigger>
-          <TabsTrigger value="income" className="flex-1">Income</TabsTrigger>
+    <div className="flex flex-col space-y-4">
+      <h2 className="text-lg font-medium text-center">
+        Add {transactionType === 'expense' ? 'Expense' : 'Income'}
+      </h2>
+      <Tabs value={transactionType} onValueChange={(value) => onTransactionTypeChange(value as TransactionType)}>
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="expense">Expense</TabsTrigger>
+          <TabsTrigger value="income">Income</TabsTrigger>
         </TabsList>
       </Tabs>
-    </>
+    </div>
   );
 };
