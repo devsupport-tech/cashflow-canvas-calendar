@@ -19,7 +19,7 @@ export const ExpenseFormHeader: React.FC<ExpenseFormHeaderProps> = ({
       <h2 className="text-lg font-medium text-center">
         {isEditing ? 'Edit' : 'Add'} {transactionType === 'expense' ? 'Expense' : 'Income'}
       </h2>
-      <Tabs value={transactionType} onValueChange={(value) => onTransactionTypeChange(value as TransactionType)} disabled={isEditing}>
+      <Tabs value={transactionType} onValueChange={(value) => onTransactionTypeChange(value as TransactionType)} className={isEditing ? "pointer-events-none opacity-70" : ""}>
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="expense">Expense</TabsTrigger>
           <TabsTrigger value="income">Income</TabsTrigger>

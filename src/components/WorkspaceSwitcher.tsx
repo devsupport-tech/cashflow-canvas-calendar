@@ -7,7 +7,7 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
-import { Briefcase, User } from 'lucide-react';
+import { Briefcase, User, Layers } from 'lucide-react';
 import { useWorkspace, WorkspaceType } from '@/contexts/WorkspaceContext';
 import { cn } from '@/lib/utils';
 
@@ -16,6 +16,11 @@ export const WorkspaceSwitcher = () => {
 
   // Map workspace types to their display properties
   const workspaces = {
+    all: {
+      label: 'All',
+      icon: Layers,
+      color: 'bg-primary'
+    },
     personal: {
       label: 'Personal',
       icon: User,
@@ -28,8 +33,8 @@ export const WorkspaceSwitcher = () => {
     }
   };
 
-  // Get current workspace details
-  const current = workspaces[currentWorkspace];
+  // Get current workspace details - with fallback for safety
+  const current = workspaces[currentWorkspace] || workspaces.all;
 
   return (
     <DropdownMenu>

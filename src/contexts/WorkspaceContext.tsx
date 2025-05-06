@@ -9,7 +9,7 @@ interface WorkspaceContextType {
   workspaceOptions: { value: WorkspaceType; label: string }[];
 }
 
-const workspaceOptions = [
+const workspaceOptions: { value: WorkspaceType; label: string }[] = [
   { value: 'all', label: 'All' },
   { value: 'personal', label: 'Personal' },
   { value: 'business', label: 'Business' }

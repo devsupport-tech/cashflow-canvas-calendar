@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { MainLayout } from '@/layouts/MainLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -22,7 +21,7 @@ const Budgets = () => {
   const [formData, setFormData] = useState({
     name: '',
     amount: '',
-    category: currentWorkspace !== 'all' ? currentWorkspace : 'personal',
+    category: currentWorkspace !== 'all' ? currentWorkspace : 'personal' as 'personal' | 'business',
   });
   
   const budgets = [
