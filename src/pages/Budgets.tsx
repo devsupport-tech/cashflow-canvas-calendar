@@ -1,17 +1,29 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { MainLayout } from '@/layouts/MainLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Download, Upload, PiggyBank, TrendingUp, ArrowUp, ArrowDown } from 'lucide-react';
+import { Plus, Download, Upload, PiggyBank, TrendingUp, ArrowUp, ArrowDown, Pencil, Trash2 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
-import { Dialog, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from '@/components/ui/use-toast';
 
 const Budgets = () => {
   const { currentWorkspace } = useWorkspace();
-  const [addBudgetOpen, setAddBudgetOpen] = React.useState(false);
+  const [addBudgetOpen, setAddBudgetOpen] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const [editBudgetId, setEditBudgetId] = useState<number | null>(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    amount: '',
+    category: currentWorkspace !== 'all' ? currentWorkspace : 'personal',
+  });
   
   const budgets = [
     { 
@@ -65,14 +77,81 @@ const Budgets = () => {
   ];
   
   // Filter budgets based on selected workspace
-  const filteredBudgets = budgets.filter(budget => 
-    budget.category === currentWorkspace
-  );
+  const filteredBudgets = currentWorkspace === 'all' 
+    ? budgets 
+    : budgets.filter(budget => budget.category === currentWorkspace);
   
   // Calculate total budget and spent
   const totalBudget = filteredBudgets.reduce((total, budget) => total + budget.amount, 0);
   const totalSpent = filteredBudgets.reduce((total, budget) => total + budget.spent, 0);
-  const percentSpent = (totalSpent / totalBudget) * 100;
+  const percentSpent = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
+  
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validate form
+    if (!formData.name || !formData.amount) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all required fields",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    toast({
+      title: editBudgetId ? "Budget Updated" : "Budget Created",
+      description: `${formData.name} budget has been ${editBudgetId ? "updated" : "created"} successfully.`,
+    });
+    
+    // Reset form and close dialog
+    setFormData({ name: '', amount: '', category: currentWorkspace !== 'all' ? currentWorkspace : 'personal' });
+    setAddBudgetOpen(false);
+    setEditBudgetId(null);
+  };
+  
+  const handleEditBudget = (budget: typeof budgets[0]) => {
+    setEditBudgetId(budget.id);
+    setFormData({
+      name: budget.name,
+      amount: budget.amount.toString(),
+      category: budget.category,
+    });
+    setAddBudgetOpen(true);
+  };
+  
+  const handleDeleteBudget = (budgetId: number) => {
+    toast({
+      title: "Budget Deleted",
+      description: "The budget has been deleted successfully.",
+    });
+  };
+  
+  const handleExport = () => {
+    setIsExporting(true);
+    
+    // Simulate export process
+    setTimeout(() => {
+      setIsExporting(false);
+      toast({
+        title: "Export Completed",
+        description: "Your budgets have been exported successfully.",
+      });
+    }, 1500);
+  };
+  
+  const handleImport = () => {
+    setIsImporting(true);
+    
+    // Simulate import process
+    setTimeout(() => {
+      setIsImporting(false);
+      toast({
+        title: "Import Completed",
+        description: "Your budgets have been imported successfully.",
+      });
+    }, 1500);
+  };
   
   return (
     <MainLayout>
@@ -88,27 +167,100 @@ const Budgets = () => {
           <div className="flex flex-wrap items-center gap-2">
             <Dialog open={addBudgetOpen} onOpenChange={setAddBudgetOpen}>
               <DialogTrigger asChild>
-                <Button className="gap-1">
+                <Button className="gap-1 animate-fade-in">
                   <Plus className="h-4 w-4" />
                   Create Budget
                 </Button>
               </DialogTrigger>
-              {/* Budget form will go here in a future update */}
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>{editBudgetId ? "Edit Budget" : "Create New Budget"}</DialogTitle>
+                  <DialogDescription>
+                    {editBudgetId ? "Update your budget details below." : "Add a new budget to track your expenses."}
+                  </DialogDescription>
+                </DialogHeader>
+                
+                <form onSubmit={handleFormSubmit} className="space-y-4 pt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Budget Name</Label>
+                    <Input 
+                      id="name" 
+                      value={formData.name} 
+                      onChange={(e) => setFormData({...formData, name: e.target.value})}
+                      placeholder="e.g., Groceries, Rent, etc."
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="amount">Monthly Amount</Label>
+                    <Input 
+                      id="amount" 
+                      value={formData.amount} 
+                      onChange={(e) => setFormData({...formData, amount: e.target.value})}
+                      placeholder="0.00"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="category">Category</Label>
+                    <Select 
+                      value={formData.category} 
+                      onValueChange={(value) => setFormData({...formData, category: value as 'personal' | 'business'})}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="personal">Personal</SelectItem>
+                        <SelectItem value="business">Business</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <DialogFooter>
+                    <Button variant="outline" type="button" onClick={() => {
+                      setAddBudgetOpen(false);
+                      setFormData({ name: '', amount: '', category: currentWorkspace !== 'all' ? currentWorkspace : 'personal' });
+                      setEditBudgetId(null);
+                    }}>
+                      Cancel
+                    </Button>
+                    <Button type="submit">
+                      {editBudgetId ? "Update Budget" : "Create Budget"}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
             </Dialog>
             
-            <Button variant="outline" className="gap-1">
-              <Upload className="h-4 w-4" />
+            <Button 
+              variant="outline" 
+              className="gap-1" 
+              onClick={handleImport}
+              isLoading={isImporting}
+              disabled={isImporting}
+            >
+              {!isImporting && <Upload className="h-4 w-4" />}
               Import
             </Button>
             
-            <Button variant="outline" className="gap-1">
-              <Download className="h-4 w-4" />
+            <Button 
+              variant="outline" 
+              className="gap-1" 
+              onClick={handleExport}
+              isLoading={isExporting}
+              disabled={isExporting}
+            >
+              {!isExporting && <Download className="h-4 w-4" />}
               Export
             </Button>
           </div>
         </div>
         
-        <div className="mb-6">
+        <div className="mb-6 animate-fade-in">
           <Card className="bg-gradient-to-br from-card to-secondary/80 backdrop-blur-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -126,12 +278,22 @@ const Budgets = () => {
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {filteredBudgets.map(budget => (
-            <BudgetCard key={budget.id} budget={budget} />
+          {filteredBudgets.map((budget, index) => (
+            <BudgetCard 
+              key={budget.id} 
+              budget={budget}
+              onEdit={() => handleEditBudget(budget)}
+              onDelete={() => handleDeleteBudget(budget.id)}
+              animationDelay={index * 0.05}
+            />
           ))}
           
           <Card className="border-dashed border-2 flex items-center justify-center h-[200px] card-hover animate-fade-in">
-            <Button variant="ghost" className="gap-2" onClick={() => setAddBudgetOpen(true)}>
+            <Button variant="ghost" className="gap-2" onClick={() => {
+              setAddBudgetOpen(true);
+              setEditBudgetId(null);
+              setFormData({ name: '', amount: '', category: currentWorkspace !== 'all' ? currentWorkspace : 'personal' });
+            }}>
               <Plus className="h-5 w-5" />
               Add New Budget
             </Button>
@@ -151,14 +313,39 @@ interface BudgetCardProps {
     category: string;
     trend: string;
   };
+  onEdit: () => void;
+  onDelete: () => void;
+  animationDelay?: number;
 }
 
-const BudgetCard: React.FC<BudgetCardProps> = ({ budget }) => {
+const BudgetCard: React.FC<BudgetCardProps> = ({ budget, onEdit, onDelete, animationDelay = 0 }) => {
   const percentSpent = (budget.spent / budget.amount) * 100;
   const remaining = budget.amount - budget.spent;
   
+  // Determine color based on percentage spent
+  const getColorClass = () => {
+    if (percentSpent > 90) return 'text-red-500';
+    if (percentSpent > 75) return 'text-amber-500';
+    return 'text-emerald-500';
+  };
+  
+  const getProgressBgClass = () => {
+    if (percentSpent > 90) return 'bg-red-100';
+    if (percentSpent > 75) return 'bg-amber-100';
+    return 'bg-emerald-100';
+  };
+  
+  const getProgressIndicatorClass = () => {
+    if (percentSpent > 90) return 'bg-red-500';
+    if (percentSpent > 75) return 'bg-amber-500';
+    return 'bg-emerald-500';
+  };
+  
   return (
-    <Card className="card-hover animate-slide-up">
+    <Card 
+      className="card-hover animate-slide-up" 
+      style={{ animationDelay: `${animationDelay}s` }}
+    >
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
           <CardTitle className="text-lg">{budget.name}</CardTitle>
@@ -184,22 +371,14 @@ const BudgetCard: React.FC<BudgetCardProps> = ({ budget }) => {
             <span>
               <span className="font-medium">${budget.spent.toFixed(2)}</span> of ${budget.amount.toFixed(2)}
             </span>
-            <span className={`font-medium ${percentSpent > 90 ? 'text-red-500' : percentSpent > 75 ? 'text-amber-500' : 'text-emerald-500'}`}>
+            <span className={`font-medium ${getColorClass()}`}>
               {percentSpent.toFixed(0)}%
             </span>
           </div>
           <Progress 
             value={percentSpent} 
-            className={`h-2 ${
-              percentSpent > 90 ? 'bg-red-100' : 
-              percentSpent > 75 ? 'bg-amber-100' : 
-              'bg-emerald-100'
-            }`} 
-            indicatorClassName={`${
-              percentSpent > 90 ? 'bg-red-500' : 
-              percentSpent > 75 ? 'bg-amber-500' : 
-              'bg-emerald-500'
-            }`}
+            className={`h-2 ${getProgressBgClass()}`}
+            indicatorClassName={getProgressIndicatorClass()}
           />
         </div>
         <div className="text-sm text-muted-foreground">
@@ -208,8 +387,16 @@ const BudgetCard: React.FC<BudgetCardProps> = ({ budget }) => {
           </span>
         </div>
       </CardContent>
-      <CardFooter className="pt-2">
-        <Button variant="ghost" size="sm" className="w-full text-xs">View Transactions</Button>
+      <CardFooter className="pt-2 flex justify-between">
+        <Button variant="ghost" size="sm" className="text-xs">View Transactions</Button>
+        <div className="flex gap-1">
+          <Button variant="ghost" size="icon" onClick={onEdit} className="h-8 w-8 text-muted-foreground hover:text-foreground">
+            <Pencil className="h-3.5 w-3.5" />
+          </Button>
+          <Button variant="ghost" size="icon" onClick={onDelete} className="h-8 w-8 text-muted-foreground hover:text-destructive">
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        </div>
       </CardFooter>
     </Card>
   );

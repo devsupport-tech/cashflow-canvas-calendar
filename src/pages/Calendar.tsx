@@ -11,6 +11,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { DatePickerWithRange } from '@/components/DateRangePicker';
 import { DateRange } from 'react-day-picker';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
 
 const Calendar = () => {
   const [formOpen, setFormOpen] = React.useState(false);
@@ -19,6 +26,7 @@ const Calendar = () => {
     to: undefined
   });
   const [viewType, setViewType] = useState<'calendar' | 'timeline'>('calendar');
+  const [timeRange, setTimeRange] = useState<'day' | 'week' | 'month' | 'quarter' | 'year'>('month');
 
   // Get unique dates that have transactions for highlighting in the calendar
   const transactionDates = dummyTransactions
@@ -77,6 +85,19 @@ const Calendar = () => {
                   </TabsTrigger>
                 </TabsList>
               </Tabs>
+              
+              <Select value={timeRange} onValueChange={(value) => setTimeRange(value as 'day' | 'week' | 'month' | 'quarter' | 'year')}>
+                <SelectTrigger className="w-[130px]">
+                  <SelectValue placeholder="Time range" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="day">Daily</SelectItem>
+                  <SelectItem value="week">Weekly</SelectItem>
+                  <SelectItem value="month">Monthly</SelectItem>
+                  <SelectItem value="quarter">Quarterly</SelectItem>
+                  <SelectItem value="year">Yearly</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             
             <DatePickerWithRange 
@@ -87,13 +108,19 @@ const Calendar = () => {
         </Card>
         
         {viewType === 'calendar' ? (
-          <ExpenseCalendar transactions={filteredTransactions} />
+          <ExpenseCalendar 
+            transactions={filteredTransactions} 
+            timeRange={timeRange}
+          />
         ) : (
           <Card>
             <CardHeader>
               <CardTitle>Transaction Timeline</CardTitle>
               <CardDescription>
-                View your upcoming and past transactions in chronological order
+                View your {timeRange === 'day' ? 'daily' : 
+                           timeRange === 'week' ? 'weekly' : 
+                           timeRange === 'month' ? 'monthly' : 
+                           timeRange === 'quarter' ? 'quarterly' : 'yearly'} transactions
               </CardDescription>
             </CardHeader>
             <CardContent>

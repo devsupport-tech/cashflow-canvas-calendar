@@ -13,11 +13,20 @@ import { ExpenseCategory } from '@/lib/types';
 interface ExpenseFormProps {
   onClose: () => void;
   initialDate?: Date;
+  initialExpense?: {
+    id: number;
+    description: string;
+    amount: number;
+    date: string;
+    category: string;
+    expenseType: string;
+  } | null;
 }
 
 export const ExpenseForm: React.FC<ExpenseFormProps> = ({
   onClose,
-  initialDate
+  initialDate,
+  initialExpense
 }) => {
   const {
     date,
@@ -33,13 +42,18 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
     transactionType,
     setTransactionType,
     handleSubmit,
-  } = useExpenseForm({ onClose, initialDate });
+  } = useExpenseForm({ 
+    onClose,
+    initialDate,
+    initialExpense
+  });
 
   return (
     <DialogContent className="sm:max-w-[425px] animate-in slide-up">
       <ExpenseFormHeader 
         transactionType={transactionType} 
-        onTransactionTypeChange={setTransactionType} 
+        onTransactionTypeChange={setTransactionType}
+        isEditing={!!initialExpense} 
       />
       
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -79,7 +93,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
           />
         )}
         
-        <FormActions onCancel={onClose} />
+        <FormActions onCancel={onClose} isEditing={!!initialExpense} />
       </form>
     </DialogContent>
   );

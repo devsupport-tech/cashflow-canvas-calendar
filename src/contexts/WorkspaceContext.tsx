@@ -6,11 +6,19 @@ export type WorkspaceType = 'all' | 'personal' | 'business';
 interface WorkspaceContextType {
   currentWorkspace: WorkspaceType;
   setWorkspace: (workspace: WorkspaceType) => void;
+  workspaceOptions: { value: WorkspaceType; label: string }[];
 }
+
+const workspaceOptions = [
+  { value: 'all', label: 'All' },
+  { value: 'personal', label: 'Personal' },
+  { value: 'business', label: 'Business' }
+];
 
 const WorkspaceContext = createContext<WorkspaceContextType>({
   currentWorkspace: 'all',
   setWorkspace: () => {},
+  workspaceOptions,
 });
 
 export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -30,7 +38,7 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   return (
-    <WorkspaceContext.Provider value={{ currentWorkspace, setWorkspace }}>
+    <WorkspaceContext.Provider value={{ currentWorkspace, setWorkspace, workspaceOptions }}>
       {children}
     </WorkspaceContext.Provider>
   );

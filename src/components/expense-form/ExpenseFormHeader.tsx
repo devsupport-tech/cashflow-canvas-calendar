@@ -6,18 +6,20 @@ import { TransactionType } from '@/lib/types';
 interface ExpenseFormHeaderProps {
   transactionType: TransactionType;
   onTransactionTypeChange: (type: TransactionType) => void;
+  isEditing?: boolean;
 }
 
 export const ExpenseFormHeader: React.FC<ExpenseFormHeaderProps> = ({
   transactionType,
-  onTransactionTypeChange
+  onTransactionTypeChange,
+  isEditing = false
 }) => {
   return (
     <div className="flex flex-col space-y-4">
       <h2 className="text-lg font-medium text-center">
-        Add {transactionType === 'expense' ? 'Expense' : 'Income'}
+        {isEditing ? 'Edit' : 'Add'} {transactionType === 'expense' ? 'Expense' : 'Income'}
       </h2>
-      <Tabs value={transactionType} onValueChange={(value) => onTransactionTypeChange(value as TransactionType)}>
+      <Tabs value={transactionType} onValueChange={(value) => onTransactionTypeChange(value as TransactionType)} disabled={isEditing}>
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="expense">Expense</TabsTrigger>
           <TabsTrigger value="income">Income</TabsTrigger>
