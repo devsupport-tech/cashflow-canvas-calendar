@@ -1,12 +1,16 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { MainLayout } from '@/layouts/MainLayout';
 import { ExpenseCalendar } from '@/components/ExpenseCalendar';
 import { BalanceCard } from '@/components/ui/BalanceCard';
 import { dummyTransactions, financeSummary } from '@/lib/dummyData';
 import { CalendarClock, TrendingUp, Wallet } from 'lucide-react';
+import { useWorkspace } from '@/contexts/WorkspaceContext';
 
 const Index = () => {
+  const { currentWorkspace } = useWorkspace();
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+
   return (
     <MainLayout>
       <div className="max-w-5xl mx-auto space-y-8">
@@ -38,7 +42,13 @@ const Index = () => {
           />
         </div>
         
-        <ExpenseCalendar transactions={dummyTransactions} />
+        <ExpenseCalendar 
+          transactions={dummyTransactions} 
+          selectedDate={selectedDate}
+          setSelectedDate={setSelectedDate}
+          viewType="month"
+          workspaceFilter={currentWorkspace}
+        />
       </div>
     </MainLayout>
   );

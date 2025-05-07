@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/components/ui/use-toast';
+import { ExpenseCategory } from '@/lib/types';
 
 const Budgets = () => {
   const { currentWorkspace } = useWorkspace();
@@ -21,7 +22,7 @@ const Budgets = () => {
   const [formData, setFormData] = useState({
     name: '',
     amount: '',
-    category: currentWorkspace !== 'all' ? currentWorkspace : 'personal' as 'personal' | 'business',
+    category: (currentWorkspace !== 'all' ? currentWorkspace : 'personal') as ExpenseCategory,
   });
   
   const budgets = [
@@ -104,7 +105,7 @@ const Budgets = () => {
     });
     
     // Reset form and close dialog
-    setFormData({ name: '', amount: '', category: currentWorkspace !== 'all' ? currentWorkspace : 'personal' });
+    setFormData({ name: '', amount: '', category: (currentWorkspace !== 'all' ? currentWorkspace : 'personal') });
     setAddBudgetOpen(false);
     setEditBudgetId(null);
   };
@@ -207,7 +208,7 @@ const Budgets = () => {
                     <Label htmlFor="category">Category</Label>
                     <Select 
                       value={formData.category} 
-                      onValueChange={(value) => setFormData({...formData, category: value as 'personal' | 'business'})}
+                      onValueChange={(value) => setFormData({...formData, category: value as ExpenseCategory})}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select category" />
@@ -222,7 +223,7 @@ const Budgets = () => {
                   <DialogFooter>
                     <Button variant="outline" type="button" onClick={() => {
                       setAddBudgetOpen(false);
-                      setFormData({ name: '', amount: '', category: currentWorkspace !== 'all' ? currentWorkspace : 'personal' });
+                      setFormData({ name: '', amount: '', category: (currentWorkspace !== 'all' ? currentWorkspace : 'personal') });
                       setEditBudgetId(null);
                     }}>
                       Cancel
@@ -291,7 +292,7 @@ const Budgets = () => {
             <Button variant="ghost" className="gap-2" onClick={() => {
               setAddBudgetOpen(true);
               setEditBudgetId(null);
-              setFormData({ name: '', amount: '', category: currentWorkspace !== 'all' ? currentWorkspace : 'personal' });
+              setFormData({ name: '', amount: '', category: (currentWorkspace !== 'all' ? currentWorkspace : 'personal') });
             }}>
               <Plus className="h-5 w-5" />
               Add New Budget

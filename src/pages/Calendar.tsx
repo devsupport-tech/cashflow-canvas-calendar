@@ -18,8 +18,10 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
+import { useWorkspace } from '@/contexts/WorkspaceContext';
 
 const Calendar = () => {
+  const { currentWorkspace } = useWorkspace();
   const [formOpen, setFormOpen] = React.useState(false);
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: new Date(),
@@ -27,6 +29,7 @@ const Calendar = () => {
   });
   const [viewType, setViewType] = useState<'calendar' | 'timeline'>('calendar');
   const [timeRange, setTimeRange] = useState<'day' | 'week' | 'month' | 'quarter' | 'year'>('month');
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
   // Get unique dates that have transactions for highlighting in the calendar
   const transactionDates = dummyTransactions
@@ -110,6 +113,10 @@ const Calendar = () => {
         {viewType === 'calendar' ? (
           <ExpenseCalendar 
             transactions={filteredTransactions} 
+            selectedDate={selectedDate}
+            setSelectedDate={setSelectedDate}
+            viewType="month"
+            workspaceFilter={currentWorkspace}
             timeRange={timeRange}
           />
         ) : (

@@ -1,18 +1,20 @@
+
 import React, { useState } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils";
-import { addDays, format, isSameDay, isSameMonth, startOfWeek, endOfWeek } from 'date-fns';
+import { addDays, format, isSameDay, isSameMonth, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { CalendarIcon } from 'lucide-react';
 import { Transaction } from '@/lib/types';
 
 interface ExpenseCalendarProps {
   transactions: Transaction[];
-  selectedDate: Date;
-  setSelectedDate: (date: Date) => void;
-  viewType: 'day' | 'week' | 'month';
-  workspaceFilter: 'all' | 'personal' | 'business';
+  selectedDate?: Date;
+  setSelectedDate?: (date: Date) => void;
+  viewType?: 'day' | 'week' | 'month';
+  workspaceFilter?: 'all' | 'personal' | 'business';
+  timeRange?: 'day' | 'week' | 'month' | 'quarter' | 'year';
 }
 
 // Helper function for comparing view types safely
@@ -25,33 +27,55 @@ export const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
   transactions,
   selectedDate,
   setSelectedDate,
-  viewType,
-  workspaceFilter
+  viewType = 'month',
+  workspaceFilter = 'all',
+  timeRange = 'month'
 }) => {
   const [open, setOpen] = useState(false);
+  const [internalDate, setInternalDate] = useState<Date>(selectedDate || new Date());
+  
+  // Use either the provided setSelectedDate function or our internal state
+  const handleDateChange = (date: Date | undefined) => {
+    if (date) {
+      if (setSelectedDate) {
+        setSelectedDate(date);
+      } else {
+        setInternalDate(date);
+      }
+    }
+  };
+  
+  // Use either the provided selectedDate or our internal state
+  const currentDate = selectedDate || internalDate;
 
   const filteredTransactions = transactions.filter(transaction => {
-    // View type filter
-    if (isViewType(viewType, 'day') && !isSameDay(new Date(transaction.date), selectedDate)) {
-      return false;
+    // Time range filter based on the timeRange prop
+    const txDate = new Date(transaction.date);
+    
+    if (timeRange === 'day') {
+      return isSameDay(txDate, currentDate);
+    } 
+    else if (timeRange === 'week') {
+      const startOfWeekDate = startOfWeek(currentDate);
+      const endOfWeekDate = endOfWeek(currentDate);
+      return txDate >= startOfWeekDate && txDate <= endOfWeekDate;
+    }
+    else if (timeRange === 'month') {
+      const startOfMonthDate = startOfMonth(currentDate);
+      const endOfMonthDate = endOfMonth(currentDate);
+      return txDate >= startOfMonthDate && txDate <= endOfMonthDate;
+    }
+    else if (timeRange === 'quarter') {
+      const startOfQuarterDate = startOfQuarter(currentDate);
+      const endOfQuarterDate = endOfQuarter(currentDate);
+      return txDate >= startOfQuarterDate && txDate <= endOfQuarterDate;
+    }
+    else if (timeRange === 'year') {
+      const startOfYearDate = startOfYear(currentDate);
+      const endOfYearDate = endOfYear(currentDate);
+      return txDate >= startOfYearDate && txDate <= endOfYearDate;
     }
     
-    if (isViewType(viewType, 'week')) {
-      const startOfWeekDate = startOfWeek(selectedDate);
-      const endOfWeekDate = endOfWeek(selectedDate);
-      const transactionDate = new Date(transaction.date);
-      
-      if (!(transactionDate >= startOfWeekDate && transactionDate <= endOfWeekDate)) {
-        return false;
-      }
-    }
-    
-    if (isViewType(viewType, 'month')) {
-      if (!isSameMonth(new Date(transaction.date), selectedDate)) {
-        return false;
-      }
-    }
-
     // Workspace filter
     if (workspaceFilter !== 'all' && transaction.category !== workspaceFilter) {
       return false;
@@ -68,12 +92,12 @@ export const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
             variant={"outline"}
             className={cn(
               "w-[300px] justify-start text-left font-normal",
-              !selectedDate && "text-muted-foreground"
+              !currentDate && "text-muted-foreground"
             )}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
-            {selectedDate ? (
-              format(selectedDate, "PPP")
+            {currentDate ? (
+              format(currentDate, "PPP")
             ) : (
               <span>Pick a date</span>
             )}
@@ -82,8 +106,8 @@ export const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
         <PopoverContent className="w-auto p-0" align="center" side="bottom">
           <Calendar
             mode="single"
-            selected={selectedDate}
-            onSelect={setSelectedDate}
+            selected={currentDate}
+            onSelect={handleDateChange}
             disabled={(date) =>
               date > addDays(new Date(), 0)
             }
@@ -92,9 +116,15 @@ export const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
         </PopoverContent>
       </Popover>
 
-      <h3 className="text-lg font-semibold mt-4">Transactions for {format(selectedDate, "PPP")}</h3>
+      <h3 className="text-lg font-semibold mt-4">
+        Transactions for {timeRange === 'day' ? format(currentDate, "PPP") :
+                          timeRange === 'week' ? `Week of ${format(startOfWeek(currentDate), "PPP")}` :
+                          timeRange === 'month' ? format(currentDate, "MMMM yyyy") :
+                          timeRange === 'quarter' ? `Q${Math.floor(currentDate.getMonth() / 3) + 1} ${currentDate.getFullYear()}` :
+                          `Year ${currentDate.getFullYear()}`}
+      </h3>
       {filteredTransactions.length === 0 ? (
-        <p className="text-muted-foreground">No transactions for this date.</p>
+        <p className="text-muted-foreground">No transactions for this {timeRange}.</p>
       ) : (
         <ul>
           {filteredTransactions.map((transaction) => (
