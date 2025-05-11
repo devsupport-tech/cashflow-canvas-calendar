@@ -105,7 +105,11 @@ const Budgets = () => {
     });
     
     // Reset form and close dialog
-    setFormData({ name: '', amount: '', category: (currentWorkspace !== 'all' ? currentWorkspace : 'personal') });
+    setFormData({ 
+      name: '', 
+      amount: '', 
+      category: (currentWorkspace !== 'all' ? currentWorkspace : 'personal') as ExpenseCategory 
+    });
     setAddBudgetOpen(false);
     setEditBudgetId(null);
   };
@@ -115,7 +119,7 @@ const Budgets = () => {
     setFormData({
       name: budget.name,
       amount: budget.amount.toString(),
-      category: budget.category,
+      category: budget.category as ExpenseCategory,
     });
     setAddBudgetOpen(true);
   };
