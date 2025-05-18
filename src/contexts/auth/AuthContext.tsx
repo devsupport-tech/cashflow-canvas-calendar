@@ -1,5 +1,5 @@
 
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { authService } from './authService';
@@ -23,55 +23,60 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Check if user is already logged in
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        setIsLoading(true);
-        console.log("Checking auth status...");
+  // Check if user is already logged in - wrapped in useCallback to stabilize
+  const checkAuth = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      console.log("Checking auth status...");
+      
+      // Get session and user
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session) {
+        console.log("Session found, getting user data");
+        const { data: { user: authUser } } = await supabase.auth.getUser();
         
-        // Get session and user
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (session) {
-          console.log("Session found, getting user data");
-          const { data: { user: authUser } } = await supabase.auth.getUser();
-          
-          if (authUser) {
-            console.log("Auth user found:", authUser.id);
-            // Get user profile data
-            const { data: profile } = await supabase
-              .from('user_profiles')
-              .select('*')
-              .eq('id', authUser.id)
-              .single();
-              
-            const userData = {
-              id: authUser.id,
-              email: authUser.email || '',
-              name: profile?.name || authUser.email?.split('@')[0] || '',
-              avatarUrl: profile?.avatar_url || undefined,
-            };
+        if (authUser) {
+          console.log("Auth user found:", authUser.id);
+          // Get user profile data
+          const { data: profile } = await supabase
+            .from('user_profiles')
+            .select('*')
+            .eq('id', authUser.id)
+            .single();
             
-            console.log("Setting user data:", userData);
-            setUser(userData);
-          }
-        } else {
-          console.log("No session found");
-          setUser(null);
+          const userData = {
+            id: authUser.id,
+            email: authUser.email || '',
+            name: profile?.name || authUser.email?.split('@')[0] || '',
+            avatarUrl: profile?.avatar_url || undefined,
+          };
+          
+          console.log("Setting user data:", userData);
+          setUser(userData);
         }
-      } catch (error) {
-        console.error('Error checking authentication:', error);
+      } else {
+        console.log("No session found");
         setUser(null);
-      } finally {
-        console.log("Auth check complete, setting isLoading to false");
-        setIsLoading(false);
       }
-    };
+    } catch (error) {
+      console.error('Error checking authentication:', error);
+      setUser(null);
+    } finally {
+      console.log("Auth check complete, setting isLoading to false");
+      setIsLoading(false);
+    }
+  }, []);
 
+  // Effect for initial auth check
+  useEffect(() => {
     checkAuth();
+  }, [checkAuth]);
+  
+  // Set up auth state change listener
+  useEffect(() => {
+    console.log("Setting up auth state change listener");
     
-    // Set up auth state change listener
     const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth state changed:', event, session ? 'with session' : 'no session');
       
@@ -124,49 +129,50 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, [navigate, location]);
 
-  const login = async (email: string, password: string) => {
+  // Wrap methods in useCallback to prevent unnecessary re-renders
+  const login = useCallback(async (email: string, password: string) => {
     console.log("Login attempt for:", email);
     try {
       await authService.login(email, password);
       // The auth state listener will handle setting the user and redirecting
       return Promise.resolve();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login error:", error);
       setIsLoading(false);
       return Promise.reject(error);
     }
-  };
+  }, []);
 
-  const signup = async (email: string, password: string, name?: string) => {
+  const signup = useCallback(async (email: string, password: string, name?: string) => {
     console.log("Signup attempt for:", email);
     try {
       await authService.signup(email, password, name);
       setIsLoading(false);
       return Promise.resolve();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Signup error:", error);
       setIsLoading(false);
       return Promise.reject(error);
     }
-  };
+  }, []);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     console.log("Logout attempt");
     try {
       await authService.logout();
       // Auth state change listener will handle the rest
       return Promise.resolve();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Logout error:", error);
       return Promise.reject(error);
     }
-  };
+  }, []);
 
-  const resetPassword = async (email: string) => {
+  const resetPassword = useCallback(async (email: string) => {
     return authService.resetPassword(email);
-  };
+  }, []);
 
-  const updateProfile = async (data: Partial<User>) => {
+  const updateProfile = useCallback(async (data: Partial<User>) => {
     try {
       if (!user?.id) throw new Error("Not authenticated");
       await authService.updateProfile(user.id, data);
@@ -176,9 +182,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       return Promise.reject(error);
     }
-  };
+  }, [user]);
 
-  const contextValue = {
+  // Memoize context value to prevent unnecessary re-renders
+  const contextValue = useMemo(() => ({
     user,
     isLoading,
     isAuthenticated: !!user,
@@ -187,7 +194,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     logout,
     resetPassword,
     updateProfile,
-  };
+  }), [user, isLoading, login, signup, logout, resetPassword, updateProfile]);
 
   console.log("Auth context state:", { 
     isAuthenticated: !!user, 

@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,13 +10,26 @@ import { Loader2, AlertCircle } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 
 export const LoginForm = () => {
-  const { login, signup, isLoading: authLoading } = useAuth();
+  const { login, signup } = useAuth();
   const [activeTab, setActiveTab] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Use callbacks to prevent unnecessary re-renders
+  const handleEmailChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value);
+  }, []);
+
+  const handlePasswordChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setPassword(e.target.value);
+  }, []);
+
+  const handleNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setName(e.target.value);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,9 +59,6 @@ export const LoginForm = () => {
       setSubmitting(false);
     }
   };
-
-  // Only disable the form when submitting, not when authLoading from context
-  const isFormDisabled = submitting;
   
   return (
     <Card className="w-full max-w-md mx-auto">
@@ -89,8 +99,8 @@ export const LoginForm = () => {
                   placeholder="your@email.com"
                   required
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={isFormDisabled}
+                  onChange={handleEmailChange}
+                  disabled={submitting}
                 />
               </div>
               <div className="space-y-2">
@@ -101,13 +111,13 @@ export const LoginForm = () => {
                   placeholder="••••••••"
                   required
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={isFormDisabled}
+                  onChange={handlePasswordChange}
+                  disabled={submitting}
                 />
               </div>
             </CardContent>
             <CardFooter>
-              <Button type="submit" className="w-full" disabled={isFormDisabled}>
+              <Button type="submit" className="w-full" disabled={submitting}>
                 {submitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Logging in...
@@ -135,8 +145,8 @@ export const LoginForm = () => {
                   id="name"
                   placeholder="John Doe"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  disabled={isFormDisabled}
+                  onChange={handleNameChange}
+                  disabled={submitting}
                 />
               </div>
               <div className="space-y-2">
@@ -147,8 +157,8 @@ export const LoginForm = () => {
                   placeholder="your@email.com"
                   required
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={isFormDisabled}
+                  onChange={handleEmailChange}
+                  disabled={submitting}
                 />
               </div>
               <div className="space-y-2">
@@ -159,13 +169,13 @@ export const LoginForm = () => {
                   placeholder="••••••••"
                   required
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={isFormDisabled}
+                  onChange={handlePasswordChange}
+                  disabled={submitting}
                 />
               </div>
             </CardContent>
             <CardFooter>
-              <Button type="submit" className="w-full" disabled={isFormDisabled}>
+              <Button type="submit" className="w-full" disabled={submitting}>
                 {submitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Creating account...

@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { memo } from "react";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { useAuth } from "@/contexts/auth";
 import { Navigate, useLocation } from "react-router-dom";
@@ -50,4 +50,5 @@ const Login = () => {
   );
 };
 
-export default Login;
+// Memoize the component to prevent unnecessary re-renders
+export default memo(Login);
