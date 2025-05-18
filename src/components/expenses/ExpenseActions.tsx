@@ -6,47 +6,49 @@ import { Dialog, DialogTrigger } from '@/components/ui/dialog';
 import { ExpenseForm } from '@/components/ExpenseForm';
 import { toast } from '@/components/ui/use-toast';
 import { ExpenseItem } from './ExpenseCard';
+import { exportExpensesToCSV } from '@/utils/exportImport';
+import { ImportExpensesDialog } from './ImportExpensesDialog';
 
 interface ExpenseActionsProps {
   formOpen: boolean;
   setFormOpen: (open: boolean) => void;
   editingExpense: ExpenseItem | null;
   setEditingExpense: (expense: ExpenseItem | null) => void;
+  expenses: ExpenseItem[];
+  onImport: (newExpenses: ExpenseItem[]) => void;
 }
 
 export const ExpenseActions: React.FC<ExpenseActionsProps> = ({
   formOpen,
   setFormOpen,
   editingExpense,
-  setEditingExpense
+  setEditingExpense,
+  expenses,
+  onImport
 }) => {
   const [isExporting, setIsExporting] = React.useState(false);
   const [isImporting, setIsImporting] = React.useState(false);
+  const [importDialogOpen, setImportDialogOpen] = React.useState(false);
 
   const handleExport = () => {
     setIsExporting(true);
     
-    // Simulate export process
-    setTimeout(() => {
-      setIsExporting(false);
+    try {
+      exportExpensesToCSV(expenses);
       toast({
         title: "Export Completed",
         description: "Your expenses have been exported successfully.",
       });
-    }, 1500);
-  };
-  
-  const handleImport = () => {
-    setIsImporting(true);
-    
-    // Simulate import process
-    setTimeout(() => {
-      setIsImporting(false);
+    } catch (error) {
+      console.error("Export failed:", error);
       toast({
-        title: "Import Completed",
-        description: "Your expenses have been imported successfully.",
+        title: "Export Failed",
+        description: "There was an error exporting your expenses.",
+        variant: "destructive"
       });
-    }, 1500);
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   return (
@@ -73,11 +75,10 @@ export const ExpenseActions: React.FC<ExpenseActionsProps> = ({
       <Button 
         variant="outline" 
         className="gap-1" 
-        onClick={handleImport} 
-        isLoading={isImporting}
+        onClick={() => setImportDialogOpen(true)}
         disabled={isImporting}
       >
-        {!isImporting && <Upload className="h-4 w-4" />}
+        <Upload className="h-4 w-4" />
         Import
       </Button>
       
@@ -85,12 +86,17 @@ export const ExpenseActions: React.FC<ExpenseActionsProps> = ({
         variant="outline" 
         className="gap-1" 
         onClick={handleExport}
-        isLoading={isExporting}
         disabled={isExporting}
       >
         {!isExporting && <Download className="h-4 w-4" />}
-        Export
+        {isExporting ? 'Exporting...' : 'Export'}
       </Button>
+      
+      <ImportExpensesDialog 
+        open={importDialogOpen} 
+        onOpenChange={setImportDialogOpen}
+        onImport={onImport}
+      />
     </div>
   );
 };

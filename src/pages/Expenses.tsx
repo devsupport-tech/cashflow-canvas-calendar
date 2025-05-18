@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MainLayout } from '@/layouts/MainLayout';
 import { toast } from '@/components/ui/use-toast';
 import { ExpenseSummary } from '@/components/expenses/ExpenseSummary';
@@ -26,7 +26,8 @@ const Expenses = () => {
     setSortBy,
     sortedExpenses,
     totalAmount,
-    workspaceDisplay
+    workspaceDisplay,
+    importExpenses
   } = useExpenseData();
   
   const handleEditExpense = (expense: ExpenseItem) => {
@@ -39,6 +40,14 @@ const Expenses = () => {
     toast({
       title: "Expense Deleted",
       description: "The expense has been deleted successfully.",
+    });
+  };
+
+  const handleImportExpenses = (importedExpenses: ExpenseItem[]) => {
+    importExpenses(importedExpenses);
+    toast({
+      title: "Expenses Imported",
+      description: `Successfully imported ${importedExpenses.length} expenses.`,
     });
   };
   
@@ -58,6 +67,8 @@ const Expenses = () => {
             setFormOpen={setFormOpen}
             editingExpense={editingExpense}
             setEditingExpense={setEditingExpense}
+            expenses={sortedExpenses}
+            onImport={handleImportExpenses}
           />
         </div>
         
