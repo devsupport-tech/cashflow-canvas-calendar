@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-export type WorkspaceType = 'all' | 'personal' | 'business';
+export type WorkspaceType = 'all' | 'personal' | string;
 export type Business = {
   id: string;
   name: string;
@@ -10,7 +10,7 @@ export type Business = {
 
 interface WorkspaceContextType {
   currentWorkspace: WorkspaceType;
-  setWorkspace: (workspace: WorkspaceType | string) => void;
+  setWorkspace: (workspace: WorkspaceType) => void;
   workspaceOptions: { value: WorkspaceType | string; label: string; color: string }[];
   businesses: Business[];
   selectedBusiness: string | null;
@@ -37,7 +37,7 @@ const WorkspaceContext = createContext<WorkspaceContextType>({
 });
 
 export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [currentWorkspace, setCurrentWorkspace] = useState<WorkspaceType | string>('all');
+  const [currentWorkspace, setCurrentWorkspace] = useState<WorkspaceType>('all');
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [selectedBusiness, setSelectedBusiness] = useState<string | null>(null);
 
@@ -55,7 +55,7 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   useEffect(() => {
     const savedWorkspace = localStorage.getItem('workspace');
     if (savedWorkspace) {
-      setCurrentWorkspace(savedWorkspace);
+      setCurrentWorkspace(savedWorkspace as WorkspaceType);
     }
 
     const savedBusinesses = localStorage.getItem('businesses');
@@ -69,7 +69,7 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   }, []);
 
-  const setWorkspace = (workspace: WorkspaceType | string) => {
+  const setWorkspace = (workspace: WorkspaceType) => {
     setCurrentWorkspace(workspace);
     localStorage.setItem('workspace', workspace);
   };
@@ -104,7 +104,7 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const selectBusiness = (id: string | null) => {
     setSelectedBusiness(id);
     if (id) {
-      setWorkspace(id);
+      setWorkspace(id as WorkspaceType);
       localStorage.setItem('selectedBusiness', id);
     } else {
       localStorage.removeItem('selectedBusiness');
