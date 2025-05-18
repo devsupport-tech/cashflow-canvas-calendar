@@ -20,6 +20,7 @@ export const LoginForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
+    console.log(`Submitting ${activeTab} form with email: ${email}`);
     
     try {
       if (activeTab === "login") {
