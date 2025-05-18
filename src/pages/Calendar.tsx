@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { MainLayout } from '@/layouts/MainLayout';
 import { ExpenseCalendar } from '@/components/ExpenseCalendar';
@@ -48,7 +49,7 @@ const Calendar = () => {
   });
 
   // Use the helper function from context to determine workspace filter type
-  const workspaceFilterType = getWorkspaceFilterType(currentWorkspace);
+  const workspaceFilterType = getWorkspaceFilterType();
 
   return (
     <MainLayout>

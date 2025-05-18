@@ -2,30 +2,22 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import { Business, WorkspaceOption } from '@/lib/types';
 
-export type Workspace = 'personal' | 'business' | 'all';
-export type WorkspaceType = Workspace; // For backward compatibility
-
-// Business type for any custom businesses
-export interface Business {
-  id: string;
-  name: string;
-  description?: string;
-  createdAt: string;
-}
+export type WorkspaceId = 'personal' | 'all' | string;
 
 type WorkspaceContextType = {
-  currentWorkspace: Workspace;
-  setCurrentWorkspace: (workspace: Workspace) => void;
-  workspaces: Workspace[];
+  currentWorkspace: WorkspaceId;
+  setCurrentWorkspace: (workspace: WorkspaceId) => void;
+  workspaces: WorkspaceId[];
   workspaceDisplay: string;
   isValidWorkspace: (workspace: string) => boolean;
   
   // Added properties to match usage in components
-  setWorkspace: (workspace: Workspace) => void;
-  workspaceOptions: Workspace[]; 
+  setWorkspace: (workspace: WorkspaceId) => void;
+  workspaceOptions: WorkspaceOption[]; 
   businesses: Business[];
-  addBusiness: (business: Omit<Business, 'id' | 'createdAt'>) => Promise<void>;
+  addBusiness: (name: string, color: string) => Promise<void>;
   deleteBusiness: (businessId: string) => Promise<void>;
   getWorkspaceFilterType: () => string;
 };
@@ -33,17 +25,17 @@ type WorkspaceContextType = {
 const WorkspaceContext = createContext<WorkspaceContextType | undefined>(undefined);
 
 export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
-  const [currentWorkspace, setCurrentWorkspace] = useState<Workspace>('personal');
+  const [currentWorkspace, setCurrentWorkspace] = useState<WorkspaceId>('personal');
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const { user } = useAuth();
   
-  const workspaces: Workspace[] = ['personal', 'business', 'all'];
+  const workspaces: WorkspaceId[] = ['personal', 'all'];
   
   // Load saved workspace preference from localStorage on initial render
   useEffect(() => {
     const savedWorkspace = localStorage.getItem('currentWorkspace');
     if (savedWorkspace && isValidWorkspace(savedWorkspace)) {
-      setCurrentWorkspace(savedWorkspace as Workspace);
+      setCurrentWorkspace(savedWorkspace as WorkspaceId);
     }
     
     // Load businesses if user is logged in
@@ -71,12 +63,13 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
   };
   
   // Add a new business
-  const addBusiness = async (business: Omit<Business, 'id' | 'createdAt'>) => {
+  const addBusiness = async (name: string, color: string) => {
     if (!user) return;
     
     try {
       const newBusiness = {
-        ...business,
+        name,
+        color,
         user_id: user.id,
         created_at: new Date().toISOString()
       };
@@ -118,10 +111,22 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
   }, [currentWorkspace]);
   
   const isValidWorkspace = (workspace: string): boolean => {
-    return workspaces.includes(workspace as Workspace);
+    if (workspaces.includes(workspace as WorkspaceId)) return true;
+    return businesses.some(b => b.id === workspace);
   };
   
   const workspaceDisplay = currentWorkspace.charAt(0).toUpperCase() + currentWorkspace.slice(1);
+  
+  // Convert workspaces to option objects for UI components
+  const workspaceOptions: WorkspaceOption[] = [
+    { value: 'all', label: 'All', color: 'bg-primary' },
+    { value: 'personal', label: 'Personal', color: 'bg-violet-500' },
+    ...businesses.map(business => ({
+      value: business.id,
+      label: business.name,
+      color: business.color
+    }))
+  ];
   
   // Get workspace filter type for components that need it
   const getWorkspaceFilterType = () => {
@@ -138,7 +143,7 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
         isValidWorkspace,
         // Aliases and additional properties
         setWorkspace: setCurrentWorkspace,
-        workspaceOptions: workspaces,
+        workspaceOptions,
         businesses,
         addBusiness,
         deleteBusiness,

@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
-import { ExpenseCategory } from '@/lib/types';
+import { ExpenseCategory, WorkspaceOption } from '@/lib/types';
 import { BudgetCard } from '@/components/budgets/BudgetCard';
 import { BudgetForm } from '@/components/budgets/BudgetForm';
 import { BudgetSummary } from '@/components/budgets/BudgetSummary';
@@ -103,10 +103,9 @@ const Budgets = () => {
     });
   };
 
-  // Find the category options based on workspaces
-  const categoryOptions = workspaceOptions.filter(option => 
-    option.value === 'personal' || 
-    option.value !== 'all'
+  // Find the category options based on workspaces (excluding 'all')
+  const categoryOptions: WorkspaceOption[] = workspaceOptions.filter(option => 
+    option.value === 'personal' || option.value !== 'all'
   );
   
   return (

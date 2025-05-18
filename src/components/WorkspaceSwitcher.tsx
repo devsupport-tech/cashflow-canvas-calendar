@@ -9,9 +9,10 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 import { Briefcase, User, Layers, Plus } from 'lucide-react';
-import { useWorkspace, WorkspaceType } from '@/contexts/WorkspaceContext';
+import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
+import { WorkspaceOption } from '@/lib/types';
 
 export const WorkspaceSwitcher = () => {
   const { currentWorkspace, setWorkspace, workspaceOptions, businesses } = useWorkspace();
@@ -28,7 +29,7 @@ export const WorkspaceSwitcher = () => {
   };
   
   // If we don't have a valid option, default to "All"
-  const current = currentOption || { 
+  const current: WorkspaceOption = currentOption || { 
     value: 'all', 
     label: 'All', 
     color: 'bg-primary' 

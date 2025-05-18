@@ -1,6 +1,6 @@
-
 import React, { useState } from 'react';
-import { useWorkspace, Business } from '@/contexts/WorkspaceContext';
+import { useWorkspace } from '@/contexts/WorkspaceContext';
+import { Business } from '@/lib/types';
 import { 
   Dialog, 
   DialogContent,
@@ -18,7 +18,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem
 } from '@/components/ui/dropdown-menu';
-import { Briefcase, Plus, Pencil, Trash2, ChevronDown } from 'lucide-react';
+import { Briefcase, Plus, Trash2, ChevronDown } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 
 const BUSINESS_COLORS = [

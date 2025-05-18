@@ -71,5 +71,12 @@ export interface Business {
   id: string;
   name: string;
   color: string;
-  createdAt: Date;
+  createdAt: Date | string;
+}
+
+// Define a workspace option type for dropdowns and selectors
+export interface WorkspaceOption {
+  value: string;
+  label: string;
+  color: string;
 }
