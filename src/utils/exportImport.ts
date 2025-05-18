@@ -52,7 +52,7 @@ export const exportTransactionsToCSV = (transactions: Transaction[]) => {
  */
 const downloadCSVFile = (csvContent: string, fileName: string) => {
   try {
-    // Create a blob and trigger download
+    // Create a blob and download it
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8" });
     
     // Create download link
