@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { MainLayout } from '@/layouts/MainLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -14,7 +15,7 @@ import { toast } from '@/components/ui/use-toast';
 import { ExpenseCategory } from '@/lib/types';
 
 const Budgets = () => {
-  const { currentWorkspace } = useWorkspace();
+  const { currentWorkspace, workspaceOptions } = useWorkspace();
   const [addBudgetOpen, setAddBudgetOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
@@ -25,6 +26,7 @@ const Budgets = () => {
     category: (currentWorkspace !== 'all' ? currentWorkspace : 'personal') as ExpenseCategory,
   });
   
+  // Dummy budgets - in a real app, these would be fetched from an API
   const budgets = [
     { 
       id: 1, 
@@ -86,6 +88,7 @@ const Budgets = () => {
   const totalSpent = filteredBudgets.reduce((total, budget) => total + budget.spent, 0);
   const percentSpent = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
   
+  // Handle form submission
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -156,6 +159,12 @@ const Budgets = () => {
       });
     }, 1500);
   };
+
+  // Find the category options based on workspaces
+  const categoryOptions = workspaceOptions.filter(option => 
+    option.value === 'personal' || 
+    option.value !== 'all'
+  );
   
   return (
     <MainLayout>
@@ -218,8 +227,14 @@ const Budgets = () => {
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="personal">Personal</SelectItem>
-                        <SelectItem value="business">Business</SelectItem>
+                        {categoryOptions.map((option) => (
+                          <SelectItem key={option.value.toString()} value={option.value.toString()}>
+                            <div className="flex items-center gap-2">
+                              <div className={`w-2 h-2 rounded-full ${option.color}`} />
+                              {option.label}
+                            </div>
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -227,7 +242,11 @@ const Budgets = () => {
                   <DialogFooter>
                     <Button variant="outline" type="button" onClick={() => {
                       setAddBudgetOpen(false);
-                      setFormData({ name: '', amount: '', category: (currentWorkspace !== 'all' ? currentWorkspace : 'personal') });
+                      setFormData({ 
+                        name: '', 
+                        amount: '', 
+                        category: (currentWorkspace !== 'all' ? currentWorkspace : 'personal') as ExpenseCategory 
+                      });
                       setEditBudgetId(null);
                     }}>
                       Cancel
@@ -244,7 +263,6 @@ const Budgets = () => {
               variant="outline" 
               className="gap-1" 
               onClick={handleImport}
-              isLoading={isImporting}
               disabled={isImporting}
             >
               {!isImporting && <Upload className="h-4 w-4" />}
@@ -255,7 +273,6 @@ const Budgets = () => {
               variant="outline" 
               className="gap-1" 
               onClick={handleExport}
-              isLoading={isExporting}
               disabled={isExporting}
             >
               {!isExporting && <Download className="h-4 w-4" />}
@@ -289,6 +306,7 @@ const Budgets = () => {
               onEdit={() => handleEditBudget(budget)}
               onDelete={() => handleDeleteBudget(budget.id)}
               animationDelay={index * 0.05}
+              workspaceOptions={workspaceOptions}
             />
           ))}
           
@@ -296,7 +314,11 @@ const Budgets = () => {
             <Button variant="ghost" className="gap-2" onClick={() => {
               setAddBudgetOpen(true);
               setEditBudgetId(null);
-              setFormData({ name: '', amount: '', category: (currentWorkspace !== 'all' ? currentWorkspace : 'personal') });
+              setFormData({ 
+                name: '', 
+                amount: '', 
+                category: (currentWorkspace !== 'all' ? currentWorkspace : 'personal') as ExpenseCategory 
+              });
             }}>
               <Plus className="h-5 w-5" />
               Add New Budget
@@ -320,11 +342,25 @@ interface BudgetCardProps {
   onEdit: () => void;
   onDelete: () => void;
   animationDelay?: number;
+  workspaceOptions: { value: string; label: string; color: string }[];
 }
 
-const BudgetCard: React.FC<BudgetCardProps> = ({ budget, onEdit, onDelete, animationDelay = 0 }) => {
+const BudgetCard: React.FC<BudgetCardProps> = ({ 
+  budget, 
+  onEdit, 
+  onDelete, 
+  animationDelay = 0,
+  workspaceOptions
+}) => {
   const percentSpent = (budget.spent / budget.amount) * 100;
   const remaining = budget.amount - budget.spent;
+  
+  // Find the workspace option for the budget category
+  const categoryOption = workspaceOptions.find(option => option.value.toString() === budget.category) || {
+    value: budget.category,
+    label: budget.category === 'personal' ? 'Personal' : 'Business',
+    color: budget.category === 'personal' ? 'bg-violet-500' : 'bg-blue-500'
+  };
   
   // Determine color based on percentage spent
   const getColorClass = () => {
@@ -355,11 +391,10 @@ const BudgetCard: React.FC<BudgetCardProps> = ({ budget, onEdit, onDelete, anima
           <CardTitle className="text-lg">{budget.name}</CardTitle>
           <Badge 
             variant="outline" 
-            className={`
-              ${budget.category === 'business' ? 'bg-ocean-blue text-white' : 'bg-bright-orange text-white'}
-            `}
+            className={`flex items-center gap-1 ${categoryOption.color} text-white`}
           >
-            {budget.category}
+            <div className="w-2 h-2 rounded-full bg-white/80" />
+            {categoryOption.label}
           </Badge>
         </div>
         <CardDescription className="flex items-center gap-1">

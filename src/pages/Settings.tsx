@@ -1,48 +1,102 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { MainLayout } from '@/layouts/MainLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { AppearanceSettings } from '@/components/settings/AppearanceSettings';
 import { AccountSettings } from '@/components/settings/AccountSettings';
+import { AppearanceSettings } from '@/components/settings/AppearanceSettings';
 import { PreferencesSettings } from '@/components/settings/PreferencesSettings';
 import { IntegrationsSettings } from '@/components/settings/IntegrationsSettings';
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { BusinessManager } from '@/components/BusinessManager';
 
 const Settings = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const hash = location.hash.replace('#', '') as 'account' | 'appearance' | 'preferences' | 'integrations' | 'businesses';
+  
+  const [activeTab, setActiveTab] = useState<string>(
+    hash && ['account', 'appearance', 'preferences', 'integrations', 'businesses'].includes(hash)
+      ? hash
+      : 'account'
+  );
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    navigate(`/settings#${value}`);
+  };
+
   return (
     <MainLayout>
-      <div className="flex flex-col gap-6 animate-fade-in">
-        <div>
-          <h1 className="text-2xl font-bold mb-2">Settings</h1>
-          <p className="text-muted-foreground">Manage your account settings and preferences</p>
+      <div className="max-w-5xl mx-auto">
+        <div className="mb-6 animate-fade-in">
+          <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
+          <p className="text-muted-foreground mt-1">
+            Manage your account settings and preferences
+          </p>
         </div>
 
-        <Tabs defaultValue="appearance" className="w-full">
-          <TabsList className="mb-4">
-            <TabsTrigger value="appearance">Appearance</TabsTrigger>
-            <TabsTrigger value="account">Account</TabsTrigger>
-            <TabsTrigger value="preferences">Preferences</TabsTrigger>
-            <TabsTrigger value="integrations">Integrations</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="appearance" className="space-y-4 animate-fade-in">
-            <AppearanceSettings />
-          </TabsContent>
-          
-          <TabsContent value="account" className="space-y-4 animate-fade-in">
-            <AccountSettings />
-          </TabsContent>
-          
-          <TabsContent value="preferences" className="space-y-4 animate-fade-in">
-            <PreferencesSettings />
-          </TabsContent>
-          
-          <TabsContent value="integrations" className="space-y-4 animate-fade-in">
-            <IntegrationsSettings />
-          </TabsContent>
-        </Tabs>
+        <Card className="overflow-hidden">
+          <CardContent className="p-0 flex">
+            <div className="w-52 border-r min-h-[500px] shrink-0">
+              <Tabs
+                defaultValue={activeTab}
+                value={activeTab}
+                onValueChange={handleTabChange}
+                orientation="vertical"
+                activationMode="manual"
+                className="h-full"
+              >
+                <TabsList className="flex flex-col items-stretch bg-transparent space-y-1 p-2">
+                  <TabsTrigger
+                    value="account"
+                    className="justify-start text-left h-9 data-[state=active]:bg-accent"
+                  >
+                    Account
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="appearance"
+                    className="justify-start text-left h-9 data-[state=active]:bg-accent"
+                  >
+                    Appearance
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="businesses"
+                    className="justify-start text-left h-9 data-[state=active]:bg-accent"
+                  >
+                    Businesses
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="preferences"
+                    className="justify-start text-left h-9 data-[state=active]:bg-accent"
+                  >
+                    Preferences
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="integrations"
+                    className="justify-start text-left h-9 data-[state=active]:bg-accent"
+                  >
+                    Integrations
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+            
+            <div className="flex-1">
+              <ScrollArea className="h-[500px] w-full">
+                <div className="p-6">
+                  {activeTab === 'account' && <AccountSettings />}
+                  {activeTab === 'appearance' && <AppearanceSettings />}
+                  {activeTab === 'businesses' && <BusinessManager />}
+                  {activeTab === 'preferences' && <PreferencesSettings />}
+                  {activeTab === 'integrations' && <IntegrationsSettings />}
+                </div>
+              </ScrollArea>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </MainLayout>
   );

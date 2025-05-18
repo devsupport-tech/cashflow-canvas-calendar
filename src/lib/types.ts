@@ -1,5 +1,5 @@
 
-export type ExpenseCategory = 'personal' | 'business';
+export type ExpenseCategory = 'personal' | 'business' | string;
 
 export type ExpenseType = 
   | 'food' 
@@ -65,4 +65,11 @@ export interface FinanceSummary {
     personal: CategoryTotal[];
     business: CategoryTotal[];
   };
+}
+
+export interface Business {
+  id: string;
+  name: string;
+  color: string;
+  createdAt: Date;
 }
