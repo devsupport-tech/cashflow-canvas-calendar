@@ -1,8 +1,4 @@
 
-import { saveAs } from 'file-saver';
-import { ExpenseItem } from "@/components/expenses/ExpenseCard";
-import { Transaction } from "@/lib/types";
-
 /**
  * Export expenses to a CSV file
  */
@@ -23,28 +19,15 @@ export const exportExpensesToCSV = (expenses: ExpenseItem[]) => {
     ].join(","))
   ].join("\n");
   
-  try {
-    // Create a blob and trigger download using file-saver
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8" });
-    saveAs(blob, `expenses-export-${new Date().toISOString().slice(0, 10)}.csv`);
-  } catch (error) {
-    console.error("Error exporting CSV:", error);
-    // Fallback method using browser's native functionality
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(new Blob([csvContent], { type: 'text/csv' }));
-    link.href = url;
-    link.download = `expenses-export-${new Date().toISOString().slice(0, 10)}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }
+  // Create a blob and download it
+  downloadCSVFile(csvContent, `expenses-export-${new Date().toISOString().slice(0, 10)}.csv`);
 };
 
 /**
  * Export transactions to a CSV file
  */
 export const exportTransactionsToCSV = (transactions: Transaction[]) => {
-  // CSV headers (adjust based on your Transaction type)
+  // CSV headers
   const headers = ["id", "description", "amount", "date", "category", "type"];
   
   // Format the data as CSV rows
@@ -60,20 +43,33 @@ export const exportTransactionsToCSV = (transactions: Transaction[]) => {
     ].join(","))
   ].join("\n");
   
+  // Create a blob and download it
+  downloadCSVFile(csvContent, `transactions-export-${new Date().toISOString().slice(0, 10)}.csv`);
+};
+
+/**
+ * Helper function to download CSV data
+ */
+const downloadCSVFile = (csvContent: string, fileName: string) => {
   try {
     // Create a blob and trigger download
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8" });
-    saveAs(blob, `transactions-export-${new Date().toISOString().slice(0, 10)}.csv`);
-  } catch (error) {
-    console.error("Error exporting CSV:", error);
-    // Fallback method
+    
+    // Create download link
+    const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
-    const url = URL.createObjectURL(new Blob([csvContent], { type: 'text/csv' }));
     link.href = url;
-    link.download = `transactions-export-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.download = fileName;
     document.body.appendChild(link);
     link.click();
-    document.body.removeChild(link);
+    
+    // Cleanup
+    setTimeout(() => {
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }, 100);
+  } catch (error) {
+    console.error("Error exporting CSV:", error);
   }
 };
 
@@ -130,7 +126,7 @@ export const parseCSVToExpenses = (csvData: string): ExpenseItem[] => {
  * Parse a CSV row handling quoted fields
  */
 const parseCSVRow = (row: string): string[] => {
-  const result = [];
+  const result: string[] = [];
   let current = "";
   let inQuotes = false;
   
@@ -154,3 +150,7 @@ const parseCSVRow = (row: string): string[] => {
   result.push(current);
   return result;
 };
+
+// Import the types
+import { ExpenseItem } from "@/components/expenses/ExpenseCard";
+import { Transaction } from "@/lib/types";
