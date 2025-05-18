@@ -1,7 +1,7 @@
 
+import { saveAs } from 'file-saver';
 import { ExpenseItem } from "@/components/expenses/ExpenseCard";
 import { Transaction } from "@/lib/types";
-import { saveAs } from "file-saver";
 
 /**
  * Export expenses to a CSV file
@@ -23,9 +23,21 @@ export const exportExpensesToCSV = (expenses: ExpenseItem[]) => {
     ].join(","))
   ].join("\n");
   
-  // Create a blob and trigger download
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8" });
-  saveAs(blob, `expenses-export-${new Date().toISOString().slice(0, 10)}.csv`);
+  try {
+    // Create a blob and trigger download using file-saver
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8" });
+    saveAs(blob, `expenses-export-${new Date().toISOString().slice(0, 10)}.csv`);
+  } catch (error) {
+    console.error("Error exporting CSV:", error);
+    // Fallback method using browser's native functionality
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(new Blob([csvContent], { type: 'text/csv' }));
+    link.href = url;
+    link.download = `expenses-export-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
 };
 
 /**
@@ -48,9 +60,21 @@ export const exportTransactionsToCSV = (transactions: Transaction[]) => {
     ].join(","))
   ].join("\n");
   
-  // Create a blob and trigger download
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8" });
-  saveAs(blob, `transactions-export-${new Date().toISOString().slice(0, 10)}.csv`);
+  try {
+    // Create a blob and trigger download
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8" });
+    saveAs(blob, `transactions-export-${new Date().toISOString().slice(0, 10)}.csv`);
+  } catch (error) {
+    console.error("Error exporting CSV:", error);
+    // Fallback method
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(new Blob([csvContent], { type: 'text/csv' }));
+    link.href = url;
+    link.download = `transactions-export-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
 };
 
 /**

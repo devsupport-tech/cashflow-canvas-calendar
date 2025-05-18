@@ -8,7 +8,6 @@ import { Plus, Upload, Download, Filter } from 'lucide-react';
 import { Dialog, DialogTrigger } from '@/components/ui/dialog';
 import { ExpenseForm } from '@/components/ExpenseForm';
 import { ImportTransactions } from '@/components/ImportTransactions';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DateRangePicker } from '@/components/DateRangePicker';
@@ -16,11 +15,14 @@ import { DateRange } from 'react-day-picker';
 import { Badge } from '@/components/ui/badge';
 import { WorkspaceSwitcher } from '@/components/WorkspaceSwitcher';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
+import { exportTransactionsToCSV } from '@/utils/exportImport';
+import { toast } from '@/components/ui/use-toast';
 
 const Transactions = () => {
   const [formOpen, setFormOpen] = React.useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [transactionTypeFilter, setTransactionTypeFilter] = useState('all');
+  const [isExporting, setIsExporting] = useState(false);
   
   // Fix: Adjust the dateRange state to use the proper DateRange type
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
@@ -30,12 +32,7 @@ const Transactions = () => {
   // Filter transactions based on selected filters and workspace
   const filteredTransactions = dummyTransactions.filter(t => {
     // Filter by workspace
-    if (t.category && t.category !== currentWorkspace) {
-      return false;
-    }
-    
-    // Filter by transaction type (business/personal) - now handled by workspace
-    if (transactionTypeFilter !== 'all' && t.category !== transactionTypeFilter) {
+    if (currentWorkspace !== 'all' && t.category && t.category !== currentWorkspace) {
       return false;
     }
     
@@ -47,6 +44,27 @@ const Transactions = () => {
     
     return true;
   });
+
+  const handleExport = () => {
+    setIsExporting(true);
+    
+    try {
+      exportTransactionsToCSV(filteredTransactions);
+      toast({
+        title: "Export Completed",
+        description: "Your transactions have been exported successfully.",
+      });
+    } catch (error) {
+      console.error("Export failed:", error);
+      toast({
+        title: "Export Failed",
+        description: "There was an error exporting your transactions.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
   
   return (
     <MainLayout>
@@ -77,9 +95,14 @@ const Transactions = () => {
               Import
             </Button>
             
-            <Button variant="outline" className="gap-1">
+            <Button 
+              variant="outline" 
+              className="gap-1"
+              onClick={handleExport}
+              disabled={isExporting}
+            >
               <Download className="h-4 w-4" />
-              Export
+              {isExporting ? 'Exporting...' : 'Export'}
             </Button>
           </div>
         </div>
