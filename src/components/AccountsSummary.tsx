@@ -18,13 +18,13 @@ const AccountCard: React.FC<AccountCardProps> = ({ title, balance, icon, color, 
   }).format(balance);
   
   return (
-    <Card className={`card-hover animate-scale-in glass-card`} style={{ animationDelay: `${index * 0.1}s` }}>
+    <Card className="card-hover glass-card transform transition-transform duration-300" style={{ animationDelay: `${index * 0.1}s` }}>
       <CardContent className="p-4 flex items-center justify-between">
         <div>
           <p className="text-sm text-muted-foreground mb-1">{title}</p>
           <p className={`text-xl font-medium ${balance < 0 ? 'text-destructive' : ''}`}>{formattedBalance}</p>
         </div>
-        <div className={`p-2.5 rounded-lg ${color} animate-float`}>
+        <div className={`p-2.5 rounded-lg ${color}`}>
           {icon}
         </div>
       </CardContent>

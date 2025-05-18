@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import React from 'react';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   BarChart3, 
@@ -11,8 +11,7 @@ import {
   PiggyBank,
   Wallet,
   FileText,
-  Briefcase,
-  ChevronDown
+  Briefcase
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -81,6 +80,7 @@ const financeNavItems = [
 
 export function AppSidebar() {
   const navigate = useNavigate();
+  const location = useLocation();
   
   return (
     <Sidebar variant="inset" className="border-r">
@@ -173,6 +173,7 @@ export function AppSidebar() {
             <SidebarMenuButton
               asChild
               tooltip="Settings"
+              isActive={location.pathname === "/settings"}
             >
               <NavLink to="/settings">
                 <Settings />

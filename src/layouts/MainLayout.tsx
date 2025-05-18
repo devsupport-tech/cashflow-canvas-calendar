@@ -21,11 +21,13 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           <div className="flex flex-1">
             <AppSidebar />
             <main 
-              className="flex-1 py-6 px-4 md:px-6" 
+              className="flex-1 py-6 px-4 md:px-6 overflow-hidden" 
               key={location.pathname}
               style={{ animation: 'fadeIn 0.3s ease-in-out' }}
             >
-              {children}
+              <div className="max-w-7xl mx-auto">
+                {children}
+              </div>
             </main>
           </div>
           

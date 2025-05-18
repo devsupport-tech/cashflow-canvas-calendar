@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ModeToggle } from '@/components/ModeToggle';
@@ -13,8 +14,8 @@ export const Header = () => {
   const isMobile = useIsMobile();
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b bg-background">
-      <div className="container flex h-16 items-center space-x-4 sm:justify-between sm:space-x-0">
+    <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container flex h-16 items-center">
         {/* Mobile Menu Button */}
         {isMobile && (
           <Sheet>
@@ -31,13 +32,14 @@ export const Header = () => {
 
         {/* Logo */}
         <Link to="/" className="hidden sm:flex items-center space-x-2">
+          <div className="h-6 w-6 rounded-md bg-gradient-to-r from-vivid-purple to-ocean-blue"></div>
           <span className="font-bold">FlowFinance</span>
         </Link>
 
         {/* Main Navigation (Hidden on Mobile) */}
         {!isMobile && <MainNav isMobile={false} />}
 
-        <div className="flex flex-1 items-center justify-end space-x-4">
+        <div className="flex flex-1 items-center justify-end space-x-3">
           <WorkspaceSwitcher />
           <ModeToggle />
           <UserMenuButton />

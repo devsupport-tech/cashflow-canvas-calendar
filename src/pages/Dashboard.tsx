@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-import { MainLayout } from '@/layouts/MainLayout';
 import { AccountsSummary } from '@/components/AccountsSummary';
 import { financeSummary, dummyTransactions } from '@/lib/dummyData';
 import { DashboardHeader } from '@/components/DashboardHeader';
@@ -20,34 +19,32 @@ const Dashboard = () => {
   });
   
   return (
-    <MainLayout>
-      <div className="max-w-7xl mx-auto">
-        <DashboardHeader
-          timeFrame={timeFrame}
-          setTimeFrame={setTimeFrame}
+    <>
+      <DashboardHeader
+        timeFrame={timeFrame}
+        setTimeFrame={setTimeFrame}
+        businessView={businessView}
+        setBusinessView={setBusinessView}
+        selectedDate={selectedDate}
+        setSelectedDate={setSelectedDate}
+      />
+      
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+        <AccountsSummary />
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <CashFlowSection 
           businessView={businessView}
-          setBusinessView={setBusinessView}
-          selectedDate={selectedDate}
-          setSelectedDate={setSelectedDate}
+          monthlySummary={financeSummary.monthlySummary}
+          timeFrame={timeFrame}
         />
         
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6 animate-slide-up" style={{ animationDelay: '0.1s' }}>
-          <AccountsSummary />
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <CashFlowSection 
-            businessView={businessView}
-            monthlySummary={financeSummary.monthlySummary}
-            timeFrame={timeFrame}
-          />
-          
-          <RecentTransactionsSection transactions={filteredTransactions} />
-        </div>
-        
-        <DashboardTabs financeSummary={financeSummary} />
+        <RecentTransactionsSection transactions={filteredTransactions} />
       </div>
-    </MainLayout>
+      
+      <DashboardTabs financeSummary={financeSummary} />
+    </>
   );
 };
 

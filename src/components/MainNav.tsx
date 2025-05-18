@@ -38,7 +38,7 @@ export const MainNav: React.FC<MainNavProps> = ({ isMobile }) => {
   return (
     <nav className={cn(
       "flex items-center",
-      isMobile ? "flex-col space-y-4 mt-8" : "space-x-4 mx-6"
+      isMobile ? "flex-col space-y-4 mt-8 w-full" : "space-x-2 mx-4"
     )}>
       {routes.map((route) => (
         <NavLink
@@ -47,10 +47,10 @@ export const MainNav: React.FC<MainNavProps> = ({ isMobile }) => {
           className={({ isActive }) =>
             cn(
               "px-3 py-2 rounded-md text-sm font-medium transition-colors",
-              isMobile ? "w-full" : "",
+              isMobile ? "w-full text-center" : "",
               isActive
                 ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:bg-secondary"
+                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
             )
           }
         >
