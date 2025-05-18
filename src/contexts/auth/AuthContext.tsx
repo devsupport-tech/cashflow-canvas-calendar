@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { authService } from './authService';
 import { User, AuthContextType } from './types';
+import { toast } from '@/components/ui/use-toast';
 
 export const AuthContext = createContext<AuthContextType>({
   user: null,
@@ -68,79 +69,66 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
 
-    // Set up auth state change listener with error handling
-    let subscription: { unsubscribe: () => void } | undefined;
-    
-    try {
-      console.log("Setting up auth state change listener");
-      const authListener = supabase.auth.onAuthStateChange?.(
-        async (event, session) => {
-          console.log('Auth state changed:', event, session ? 'with session' : 'no session');
-          
-          if (event === 'SIGNED_IN' && session) {
-            const { user: authUser } = session;
-            
-            console.log("User signed in:", authUser.id);
-            
-            // Get user profile data
-            const { data: profile } = await supabase
-              .from('user_profiles')
-              .select('*')
-              .eq('id', authUser.id)
-              .single();
-              
-            setUser({
-              id: authUser.id,
-              email: authUser.email || '',
-              name: profile?.name || authUser.email?.split('@')[0] || '',
-              avatarUrl: profile?.avatar_url || undefined,
-            });
-            
-            setIsLoading(false);
-            
-            // Get the intended destination from state, or default to home
-            const from = (location.state as any)?.from || '/';
-            console.log('Auth listener - Redirecting to:', from);
-            navigate(from, { replace: true });
-          } else if (event === 'SIGNED_OUT') {
-            console.log("User signed out");
-            setUser(null);
-            setIsLoading(false);
-            navigate('/login', { replace: true });
-          }
-        }
-      );
-      
-      // Check if we got a valid subscription back
-      if (authListener && 'data' in authListener) {
-        subscription = authListener.data.subscription;
-      }
-    } catch (error) {
-      console.error('Error setting up auth listener:', error);
-      setIsLoading(false);
-    }
-
     checkAuth();
-
-    // Cleanup the subscription
-    return () => {
-      if (subscription) {
+    
+    // Set up auth state change listener
+    const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event, session ? 'with session' : 'no session');
+      
+      if (event === 'SIGNED_IN' && session) {
         try {
-          console.log("Cleaning up auth subscription");
-          subscription.unsubscribe();
+          setIsLoading(true);
+          const { user: authUser } = session;
+          
+          console.log("User signed in:", authUser.id);
+          
+          // Get user profile data
+          const { data: profile } = await supabase
+            .from('user_profiles')
+            .select('*')
+            .eq('id', authUser.id)
+            .single();
+            
+          setUser({
+            id: authUser.id,
+            email: authUser.email || '',
+            name: profile?.name || authUser.email?.split('@')[0] || '',
+            avatarUrl: profile?.avatar_url || undefined,
+          });
+          
+          // Show success toast
+          toast({
+            title: "Login successful",
+            description: "Welcome back!",
+          });
+          
+          // Get the intended destination from state, or default to home
+          const from = (location.state as any)?.from || '/';
+          console.log('Auth listener - Redirecting to:', from);
+          navigate(from, { replace: true });
         } catch (error) {
-          console.error('Error unsubscribing from auth changes:', error);
+          console.error('Error setting user data:', error);
+        } finally {
+          setIsLoading(false);
         }
+      } else if (event === 'SIGNED_OUT') {
+        console.log("User signed out");
+        setUser(null);
+        setIsLoading(false);
+        navigate('/login', { replace: true });
       }
+    });
+
+    return () => {
+      data?.subscription?.unsubscribe();
     };
   }, [navigate, location]);
 
   const login = async (email: string, password: string) => {
     console.log("Login attempt for:", email);
-    setIsLoading(true);
     try {
       await authService.login(email, password);
-      // The redirection will be handled by the auth state change listener
+      // The auth state listener will handle setting the user and redirecting
       return Promise.resolve();
     } catch (error) {
       console.error("Login error:", error);
@@ -151,7 +139,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signup = async (email: string, password: string, name?: string) => {
     console.log("Signup attempt for:", email);
-    setIsLoading(true);
     try {
       await authService.signup(email, password, name);
       setIsLoading(false);
@@ -167,7 +154,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log("Logout attempt");
     try {
       await authService.logout();
-      // The redirection will be handled by the auth state change listener
+      // Auth state change listener will handle the rest
       return Promise.resolve();
     } catch (error) {
       console.error("Logout error:", error);

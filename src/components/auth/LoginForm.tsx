@@ -6,19 +6,21 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/auth";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 
 export const LoginForm = () => {
-  const { login, signup, isLoading } = useAuth();
+  const { login, signup, isLoading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     setSubmitting(true);
     console.log(`Submitting ${activeTab} form with email: ${email}`);
     
@@ -36,16 +38,16 @@ export const LoginForm = () => {
         setActiveTab("login");
         setPassword("");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Authentication error:", error);
+      setError(error?.message || "Authentication failed. Please try again.");
       // Error toasts are handled in authService
     } finally {
       setSubmitting(false);
     }
   };
 
-  // Only disable the form when submitting, not when isLoading from context
-  // This ensures users can type in the form even when auth state is being checked
+  // Only disable the form when submitting, not when authLoading from context
   const isFormDisabled = submitting;
   
   return (
@@ -73,6 +75,12 @@ export const LoginForm = () => {
         <TabsContent value="login">
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4 pt-4">
+              {error && (
+                <div className="bg-destructive/10 p-3 rounded-md flex items-start space-x-2 text-destructive">
+                  <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                  <p className="text-sm">{error}</p>
+                </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -115,6 +123,12 @@ export const LoginForm = () => {
         <TabsContent value="signup">
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4 pt-4">
+              {error && (
+                <div className="bg-destructive/10 p-3 rounded-md flex items-start space-x-2 text-destructive">
+                  <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                  <p className="text-sm">{error}</p>
+                </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="name">Name</Label>
                 <Input
