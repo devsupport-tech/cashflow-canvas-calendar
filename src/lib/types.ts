@@ -1,4 +1,3 @@
-
 export type ExpenseCategory = 'personal' | 'business' | string;
 
 export type ExpenseType = 
