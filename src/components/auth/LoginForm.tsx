@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export const LoginForm = () => {
   const { login, signup, isLoading } = useAuth();
@@ -14,6 +15,7 @@ export const LoginForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,8 +23,10 @@ export const LoginForm = () => {
     try {
       if (activeTab === "login") {
         await login(email, password);
+        navigate("/"); // Explicitly navigate to dashboard after successful login
       } else {
         await signup(email, password, name);
+        // After signup, we'll stay on the page to let them log in
       }
     } catch (error) {
       // Error is handled in the auth context

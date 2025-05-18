@@ -64,6 +64,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               name: profile?.name || authUser.email?.split('@')[0] || '',
               avatarUrl: profile?.avatar_url || undefined,
             });
+            
+            // Navigate to dashboard if already authenticated and on login page
+            if (window.location.pathname === '/login') {
+              navigate('/');
+            }
           }
         }
       } catch (error) {
@@ -95,6 +100,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               name: profile?.name || authUser.email?.split('@')[0] || '',
               avatarUrl: profile?.avatar_url || undefined,
             });
+            
+            // Redirect to dashboard on sign in
+            navigate('/');
           } else if (event === 'SIGNED_OUT') {
             setUser(null);
             navigate('/login');
@@ -127,7 +135,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error, data } = await supabase.auth.signInWithPassword({ email, password });
       
       if (error) throw error;
       
@@ -136,7 +144,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: "Welcome back!",
       });
       
-      navigate('/');
+      // Note: Remove this navigate call as we're handling navigation in the auth listener
+      // and in the component to avoid multiple redirects
       return Promise.resolve();
     } catch (error: any) {
       console.error('Login error:', error);
