@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 export type WorkspaceType = 'all' | 'personal' | string;
@@ -16,6 +17,7 @@ interface WorkspaceContextType {
   addBusiness: (name: string, color: string) => void;
   deleteBusiness: (id: string) => void;
   selectBusiness: (id: string | null) => void;
+  getWorkspaceFilterType: (workspace: WorkspaceType) => 'all' | 'personal' | 'business';
 }
 
 // Default workspace options
@@ -32,7 +34,8 @@ const WorkspaceContext = createContext<WorkspaceContextType>({
   selectedBusiness: null,
   addBusiness: () => {},
   deleteBusiness: () => {},
-  selectBusiness: () => {}
+  selectBusiness: () => {},
+  getWorkspaceFilterType: () => 'all',
 });
 
 export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -109,6 +112,11 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       localStorage.removeItem('selectedBusiness');
     }
   };
+  
+  // Helper function to determine workspaceFilterType for components that need it
+  const getWorkspaceFilterType = (workspace: WorkspaceType): 'all' | 'personal' | 'business' => {
+    return workspace === 'all' || workspace === 'personal' ? workspace : 'business';
+  };
 
   return (
     <WorkspaceContext.Provider 
@@ -120,7 +128,8 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         selectedBusiness,
         addBusiness,
         deleteBusiness,
-        selectBusiness
+        selectBusiness,
+        getWorkspaceFilterType
       }}
     >
       {children}

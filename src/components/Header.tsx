@@ -1,107 +1,47 @@
-
 import React from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, BarChart3, ListPlus, Calendar, Menu, X, Settings } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { ModeToggle } from '@/components/ModeToggle';
+import { MainNav } from '@/components/MainNav';
 import { Button } from '@/components/ui/button';
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from '@/components/ui/sheet';
-import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { WorkspaceSwitcher } from './WorkspaceSwitcher';
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Menu } from "lucide-react"
+import { WorkspaceSwitcher } from '@/components/WorkspaceSwitcher';
+import { UserMenuButton } from '@/components/UserMenuButton';
 
-const navItems = [
-  { 
-    name: 'Dashboard', 
-    icon: <LayoutDashboard className="h-4 w-4" />, 
-    href: '/' 
-  },
-  { 
-    name: 'Calendar', 
-    icon: <Calendar className="h-4 w-4" />, 
-    href: '/calendar' 
-  },
-  { 
-    name: 'Analytics', 
-    icon: <BarChart3 className="h-4 w-4" />, 
-    href: '/analytics' 
-  },
-  { 
-    name: 'Transactions', 
-    icon: <ListPlus className="h-4 w-4" />, 
-    href: '/transactions' 
-  },
-  { 
-    name: 'Settings', 
-    icon: <Settings className="h-4 w-4" />, 
-    href: '/settings' 
-  }
-];
-
-export const Header: React.FC = () => {
+export const Header = () => {
   const isMobile = useIsMobile();
-  const [sheetOpen, setSheetOpen] = React.useState(false);
-  const location = useLocation();
-
-  const NavItems = () => (
-    <>
-      {navItems.map((item) => {
-        const isActive = location.pathname === item.href;
-        return (
-          <NavLink
-            key={item.href}
-            to={item.href}
-            onClick={() => setSheetOpen(false)}
-            className={({ isActive }) =>
-              cn(
-                "flex items-center gap-2 px-4 py-2 rounded-md transition-colors", 
-                isActive 
-                  ? "bg-primary/10 text-primary font-medium" 
-                  : "hover:bg-accent/50"
-              )
-            }
-          >
-            {React.cloneElement(item.icon, { 
-              className: cn("h-4 w-4", isActive ? "text-primary" : "") 
-            })}
-            <span>{item.name}</span>
-          </NavLink>
-        );
-      })}
-    </>
-  );
 
   return (
-    <header className="sticky top-0 z-50 w-full backdrop-blur-md bg-background/80 border-b border-border transition-all duration-200">
-      <div className="container h-14 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <h1 className="font-medium text-lg">FlowFinance</h1>
-          {!isMobile && <WorkspaceSwitcher />}
-        </div>
-
-        {isMobile ? (
-          <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+    <header className="sticky top-0 z-40 w-full border-b bg-background">
+      <div className="container flex h-16 items-center space-x-4 sm:justify-between sm:space-x-0">
+        {/* Mobile Menu Button */}
+        {isMobile && (
+          <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon">
-                {sheetOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              <Button variant="ghost" size="sm" className="mr-2">
+                <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-64 pt-10">
-              <div className="mb-8">
-                <WorkspaceSwitcher />
-              </div>
-              <nav className="flex flex-col gap-1">
-                <NavItems />
-              </nav>
+            <SheetContent side="left" className="w-3/4 sm:w-1/3 p-6">
+              <MainNav isMobile={true} />
             </SheetContent>
           </Sheet>
-        ) : (
-          <nav className="flex items-center gap-1">
-            <NavItems />
-          </nav>
         )}
+
+        {/* Logo */}
+        <Link to="/" className="hidden sm:flex items-center space-x-2">
+          <span className="font-bold">FlowFinance</span>
+        </Link>
+
+        {/* Main Navigation (Hidden on Mobile) */}
+        {!isMobile && <MainNav isMobile={false} />}
+
+        <div className="flex flex-1 items-center justify-end space-x-4">
+          <WorkspaceSwitcher />
+          <ModeToggle />
+          <UserMenuButton />
+        </div>
       </div>
     </header>
   );

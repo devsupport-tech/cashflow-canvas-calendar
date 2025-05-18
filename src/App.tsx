@@ -11,12 +11,15 @@ import Transactions from "./pages/Transactions";
 import Calendar from "./pages/Calendar";
 import Documents from "./pages/Documents";
 import Settings from "./pages/Settings";
+import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import Accounts from "./pages/Accounts";
 import Budgets from "./pages/Budgets";
 import Expenses from "./pages/Expenses";
 import { ColorThemeProvider } from "./contexts/ColorThemeContext";
 import { WorkspaceProvider } from "./contexts/WorkspaceContext";
+import { AuthProvider } from "./contexts/AuthContext";
+import { AuthGuard } from "./components/auth/AuthGuard";
 
 const queryClient = new QueryClient();
 
@@ -26,16 +29,21 @@ const AppRoutes = () => {
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/calendar" element={<Calendar />} />
-        <Route path="/analytics" element={<Analytics />} />
-        <Route path="/transactions" element={<Transactions />} />
-        <Route path="/documents" element={<Documents />} />
-        <Route path="/accounts" element={<Accounts />} />
-        <Route path="/budgets" element={<Budgets />} />
-        <Route path="/expenses" element={<Expenses />} />
-        <Route path="/settings" element={<Settings />} />
-        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+        {/* Public routes */}
+        <Route path="/login" element={<Login />} />
+        
+        {/* Protected routes */}
+        <Route path="/" element={<AuthGuard><Dashboard /></AuthGuard>} />
+        <Route path="/calendar" element={<AuthGuard><Calendar /></AuthGuard>} />
+        <Route path="/analytics" element={<AuthGuard><Analytics /></AuthGuard>} />
+        <Route path="/transactions" element={<AuthGuard><Transactions /></AuthGuard>} />
+        <Route path="/documents" element={<AuthGuard><Documents /></AuthGuard>} />
+        <Route path="/accounts" element={<AuthGuard><Accounts /></AuthGuard>} />
+        <Route path="/budgets" element={<AuthGuard><Budgets /></AuthGuard>} />
+        <Route path="/expenses" element={<AuthGuard><Expenses /></AuthGuard>} />
+        <Route path="/settings" element={<AuthGuard><Settings /></AuthGuard>} />
+        
+        {/* Catch-all route */}
         <Route path="*" element={<NotFound />} />
       </Routes>
     </AnimatePresence>
@@ -45,15 +53,17 @@ const AppRoutes = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ColorThemeProvider>
-      <WorkspaceProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <AppRoutes />
-          </BrowserRouter>
-        </TooltipProvider>
-      </WorkspaceProvider>
+      <AuthProvider>
+        <WorkspaceProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <AppRoutes />
+            </BrowserRouter>
+          </TooltipProvider>
+        </WorkspaceProvider>
+      </AuthProvider>
     </ColorThemeProvider>
   </QueryClientProvider>
 );

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { MainLayout } from '@/layouts/MainLayout';
 import { ExpenseCalendar } from '@/components/ExpenseCalendar';
@@ -21,7 +20,7 @@ import {
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 
 const Calendar = () => {
-  const { currentWorkspace } = useWorkspace();
+  const { currentWorkspace, getWorkspaceFilterType } = useWorkspace();
   const [formOpen, setFormOpen] = React.useState(false);
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: new Date(),
@@ -48,9 +47,8 @@ const Calendar = () => {
     return txDate.toDateString() === dateRange.from.toDateString();
   });
 
-  // Determine the workspace filter type for ExpenseCalendar
-  const workspaceFilterType = currentWorkspace === 'all' || currentWorkspace === 'personal' ? 
-    currentWorkspace : 'business';
+  // Use the helper function from context to determine workspace filter type
+  const workspaceFilterType = getWorkspaceFilterType(currentWorkspace);
 
   return (
     <MainLayout>
