@@ -1,7 +1,7 @@
 
 import React, { useEffect } from "react";
 import { LoginForm } from "@/components/auth/LoginForm";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
 import { Navigate, useNavigate } from "react-router-dom";
 
 const Login = () => {

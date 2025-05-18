@@ -18,7 +18,7 @@ import Budgets from "./pages/Budgets";
 import Expenses from "./pages/Expenses";
 import { ColorThemeProvider } from "./contexts/ColorThemeContext";
 import { WorkspaceProvider } from "./contexts/WorkspaceContext";
-import { AuthProvider } from "./contexts/AuthContext";
+import { AuthProvider } from "./contexts/auth";
 import { AuthGuard } from "./components/auth/AuthGuard";
 import AppRoutes from "./routes";
 
