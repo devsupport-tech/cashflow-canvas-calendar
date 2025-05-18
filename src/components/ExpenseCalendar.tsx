@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -13,7 +12,7 @@ interface ExpenseCalendarProps {
   selectedDate?: Date;
   setSelectedDate?: (date: Date) => void;
   viewType?: 'day' | 'week' | 'month';
-  workspaceFilter?: 'all' | 'personal' | 'business';
+  workspaceFilter?: string; // Changed from 'all' | 'personal' | 'business' to string
   timeRange?: 'day' | 'week' | 'month' | 'quarter' | 'year';
 }
 
