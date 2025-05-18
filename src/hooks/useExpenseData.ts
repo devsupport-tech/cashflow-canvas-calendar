@@ -1,7 +1,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/auth'; // Updated import path
 import { ExpenseItem } from '@/components/expenses/ExpenseCard';
 import { supabase } from '@/lib/supabase';
 import { toast } from '@/components/ui/use-toast';
