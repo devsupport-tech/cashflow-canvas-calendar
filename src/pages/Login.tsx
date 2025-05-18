@@ -1,15 +1,19 @@
 
-import React, { useEffect } from "react";
+import React from "react";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { useAuth } from "@/contexts/auth";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 
 const Login = () => {
   const { isAuthenticated, isLoading } = useAuth();
+  const location = useLocation();
+  
+  // Get the redirect path from location state or default to root
+  const from = (location.state as any)?.from || "/";
 
-  // If authenticated, redirect to dashboard
+  // If authenticated, redirect to the intended page or dashboard
   if (isAuthenticated && !isLoading) {
-    return <Navigate to="/" replace />;
+    return <Navigate to={from} replace />;
   }
 
   return (

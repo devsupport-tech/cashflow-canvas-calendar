@@ -24,6 +24,7 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   }
 
   // Redirect to login if not authenticated
+  // Pass the current location in state to enable redirect back after login
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }

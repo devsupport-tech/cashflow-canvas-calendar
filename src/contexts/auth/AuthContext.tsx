@@ -86,8 +86,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               avatarUrl: profile?.avatar_url || undefined,
             });
             
-            // Redirect to dashboard on sign in
-            navigate('/', { replace: true });
+            // Get the intended destination from state, or default to home
+            const from = (location.state as any)?.from || '/';
+            navigate(from, { replace: true });
           } else if (event === 'SIGNED_OUT') {
             setUser(null);
             navigate('/login', { replace: true });
@@ -115,7 +116,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
     };
-  }, [navigate, location.pathname]);
+  }, [navigate, location]);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
@@ -145,7 +146,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await authService.logout();
       setUser(null);
-      navigate('/login');
+      navigate('/login', { replace: true });
       return Promise.resolve();
     } catch (error) {
       return Promise.reject(error);
