@@ -23,7 +23,7 @@ export const LoginForm = () => {
     try {
       if (activeTab === "login") {
         await login(email, password);
-        navigate("/"); // Explicitly navigate to dashboard after successful login
+        // Auth state listener in AuthContext will handle the navigation
       } else {
         await signup(email, password, name);
         // After signup, we'll stay on the page to let them log in

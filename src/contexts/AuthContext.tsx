@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from '@/lib/supabase';
@@ -135,7 +134,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const { error, data } = await supabase.auth.signInWithPassword({ email, password });
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
       
       if (error) throw error;
       
@@ -144,8 +143,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: "Welcome back!",
       });
       
-      // Note: Remove this navigate call as we're handling navigation in the auth listener
-      // and in the component to avoid multiple redirects
+      // Note: We're handling navigation in the auth listener
       return Promise.resolve();
     } catch (error: any) {
       console.error('Login error:', error);
