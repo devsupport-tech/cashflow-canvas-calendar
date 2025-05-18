@@ -1,10 +1,8 @@
 
-import React, { createContext, useState, useEffect, useCallback, useMemo } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
-import { authService } from './authService';
+import React, { createContext, useMemo } from 'react';
 import { User, AuthContextType } from './types';
-import { toast } from '@/components/ui/use-toast';
+import { useAuthState } from './useAuthState';
+import { useAuthActions } from './useAuthActions';
 
 export const AuthContext = createContext<AuthContextType>({
   user: null,
@@ -18,171 +16,23 @@ export const AuthContext = createContext<AuthContextType>({
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  // Check if user is already logged in - wrapped in useCallback to stabilize
-  const checkAuth = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      console.log("Checking auth status...");
-      
-      // Get session and user
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session) {
-        console.log("Session found, getting user data");
-        const { data: { user: authUser } } = await supabase.auth.getUser();
-        
-        if (authUser) {
-          console.log("Auth user found:", authUser.id);
-          // Get user profile data
-          const { data: profile } = await supabase
-            .from('user_profiles')
-            .select('*')
-            .eq('id', authUser.id)
-            .single();
-            
-          const userData = {
-            id: authUser.id,
-            email: authUser.email || '',
-            name: profile?.name || authUser.email?.split('@')[0] || '',
-            avatarUrl: profile?.avatar_url || undefined,
-          };
-          
-          console.log("Setting user data:", userData);
-          setUser(userData);
-        }
-      } else {
-        console.log("No session found");
-        setUser(null);
-      }
-    } catch (error) {
-      console.error('Error checking authentication:', error);
-      setUser(null);
-    } finally {
-      console.log("Auth check complete, setting isLoading to false");
-      setIsLoading(false);
-    }
-  }, []);
-
-  // Effect for initial auth check
-  useEffect(() => {
-    checkAuth();
-  }, [checkAuth]);
+  // Get auth state from hook
+  const { user, setUser, isLoading, setIsLoading } = useAuthState();
   
-  // Set up auth state change listener
-  useEffect(() => {
-    console.log("Setting up auth state change listener");
-    
-    const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', event, session ? 'with session' : 'no session');
-      
-      if (event === 'SIGNED_IN' && session) {
-        try {
-          setIsLoading(true);
-          const { user: authUser } = session;
-          
-          console.log("User signed in:", authUser.id);
-          
-          // Get user profile data
-          const { data: profile } = await supabase
-            .from('user_profiles')
-            .select('*')
-            .eq('id', authUser.id)
-            .single();
-            
-          setUser({
-            id: authUser.id,
-            email: authUser.email || '',
-            name: profile?.name || authUser.email?.split('@')[0] || '',
-            avatarUrl: profile?.avatar_url || undefined,
-          });
-          
-          // Show success toast
-          toast({
-            title: "Login successful",
-            description: "Welcome back!",
-          });
-          
-          // Get the intended destination from state, or default to home
-          const from = (location.state as any)?.from || '/';
-          console.log('Auth listener - Redirecting to:', from);
-          navigate(from, { replace: true });
-        } catch (error) {
-          console.error('Error setting user data:', error);
-        } finally {
-          setIsLoading(false);
-        }
-      } else if (event === 'SIGNED_OUT') {
-        console.log("User signed out");
-        setUser(null);
-        setIsLoading(false);
-        navigate('/login', { replace: true });
-      }
-    });
+  // Get auth actions from hook
+  const { login, signup, logout, resetPassword, updateProfile } = useAuthActions(user, setIsLoading);
 
-    return () => {
-      data?.subscription?.unsubscribe();
-    };
-  }, [navigate, location]);
-
-  // Wrap methods in useCallback to prevent unnecessary re-renders
-  const login = useCallback(async (email: string, password: string) => {
-    console.log("Login attempt for:", email);
+  // Wrap updateProfile to update local state
+  const handleUpdateProfile = async (data: Partial<User>) => {
     try {
-      await authService.login(email, password);
-      // The auth state listener will handle setting the user and redirecting
-      return Promise.resolve();
-    } catch (error: any) {
-      console.error("Login error:", error);
-      setIsLoading(false);
-      return Promise.reject(error);
-    }
-  }, []);
-
-  const signup = useCallback(async (email: string, password: string, name?: string) => {
-    console.log("Signup attempt for:", email);
-    try {
-      await authService.signup(email, password, name);
-      setIsLoading(false);
-      return Promise.resolve();
-    } catch (error: any) {
-      console.error("Signup error:", error);
-      setIsLoading(false);
-      return Promise.reject(error);
-    }
-  }, []);
-
-  const logout = useCallback(async () => {
-    console.log("Logout attempt");
-    try {
-      await authService.logout();
-      // Auth state change listener will handle the rest
-      return Promise.resolve();
-    } catch (error: any) {
-      console.error("Logout error:", error);
-      return Promise.reject(error);
-    }
-  }, []);
-
-  const resetPassword = useCallback(async (email: string) => {
-    return authService.resetPassword(email);
-  }, []);
-
-  const updateProfile = useCallback(async (data: Partial<User>) => {
-    try {
-      if (!user?.id) throw new Error("Not authenticated");
-      await authService.updateProfile(user.id, data);
+      await updateProfile(data);
       // Update local state
       setUser(current => current ? { ...current, ...data } : null);
       return Promise.resolve();
     } catch (error) {
       return Promise.reject(error);
     }
-  }, [user]);
+  };
 
   // Memoize context value to prevent unnecessary re-renders
   const contextValue = useMemo(() => ({
@@ -193,8 +43,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signup,
     logout,
     resetPassword,
-    updateProfile,
-  }), [user, isLoading, login, signup, logout, resetPassword, updateProfile]);
+    updateProfile: handleUpdateProfile,
+  }), [user, isLoading, login, signup, logout, resetPassword, handleUpdateProfile]);
 
   console.log("Auth context state:", { 
     isAuthenticated: !!user, 
