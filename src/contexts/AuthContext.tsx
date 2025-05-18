@@ -73,37 +73,54 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
 
-    // Set up auth state change listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === 'SIGNED_IN' && session) {
-          const { user: authUser } = session;
-          
-          // Get user profile data
-          const { data: profile } = await supabase
-            .from('user_profiles')
-            .select('*')
-            .eq('id', authUser.id)
-            .single();
+    // Set up auth state change listener with error handling
+    let subscription: { unsubscribe: () => void } | undefined;
+    
+    try {
+      const authListener = supabase.auth.onAuthStateChange?.(
+        async (event, session) => {
+          if (event === 'SIGNED_IN' && session) {
+            const { user: authUser } = session;
             
-          setUser({
-            id: authUser.id,
-            email: authUser.email || '',
-            name: profile?.name || authUser.email?.split('@')[0] || '',
-            avatarUrl: profile?.avatar_url || undefined,
-          });
-        } else if (event === 'SIGNED_OUT') {
-          setUser(null);
-          navigate('/login');
+            // Get user profile data
+            const { data: profile } = await supabase
+              .from('user_profiles')
+              .select('*')
+              .eq('id', authUser.id)
+              .single();
+              
+            setUser({
+              id: authUser.id,
+              email: authUser.email || '',
+              name: profile?.name || authUser.email?.split('@')[0] || '',
+              avatarUrl: profile?.avatar_url || undefined,
+            });
+          } else if (event === 'SIGNED_OUT') {
+            setUser(null);
+            navigate('/login');
+          }
         }
+      );
+      
+      // Check if we got a valid subscription back
+      if (authListener && 'data' in authListener) {
+        subscription = authListener.data.subscription;
       }
-    );
+    } catch (error) {
+      console.error('Error setting up auth listener:', error);
+    }
 
     checkAuth();
 
     // Cleanup the subscription
     return () => {
-      subscription?.unsubscribe();
+      if (subscription) {
+        try {
+          subscription.unsubscribe();
+        } catch (error) {
+          console.error('Error unsubscribing from auth changes:', error);
+        }
+      }
     };
   }, [navigate]);
 
