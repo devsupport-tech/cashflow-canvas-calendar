@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/auth";
 import { Loader2 } from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
 
 export const LoginForm = () => {
@@ -23,13 +23,17 @@ export const LoginForm = () => {
     try {
       if (activeTab === "login") {
         await login(email, password);
-        // Auth state listener in AuthContext will handle the navigation
+        // Auth context will handle navigation
       } else {
         await signup(email, password, name);
-        // After signup, we'll stay on the page to let them log in
+        toast({
+          title: "Account created",
+          description: "Please check your email to confirm your account."
+        });
+        // Switch to login tab after successful signup
+        setActiveTab("login");
       }
     } catch (error) {
-      // Error is handled in the auth context
       console.error("Authentication error:", error);
     }
   };

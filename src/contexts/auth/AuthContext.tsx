@@ -1,6 +1,6 @@
 
 import React, { createContext, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { authService } from './authService';
 import { User, AuthContextType } from './types';
@@ -20,6 +20,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Check if user is already logged in
   useEffect(() => {
@@ -48,9 +49,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               avatarUrl: profile?.avatar_url || undefined,
             });
             
-            // Navigate to dashboard if already authenticated and on login page
-            if (window.location.pathname === '/login') {
-              navigate('/');
+            // Redirect to dashboard if on login page
+            if (location.pathname === '/login') {
+              navigate('/', { replace: true });
             }
           }
         }
@@ -67,6 +68,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const authListener = supabase.auth.onAuthStateChange?.(
         async (event, session) => {
+          console.log('Auth state changed:', event);
           if (event === 'SIGNED_IN' && session) {
             const { user: authUser } = session;
             
@@ -85,10 +87,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             });
             
             // Redirect to dashboard on sign in
-            navigate('/');
+            navigate('/', { replace: true });
           } else if (event === 'SIGNED_OUT') {
             setUser(null);
-            navigate('/login');
+            navigate('/login', { replace: true });
           }
         }
       );
@@ -113,7 +115,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
     };
-  }, [navigate]);
+  }, [navigate, location.pathname]);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);

@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
@@ -10,6 +11,7 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
 
+  // Show loading state while checking authentication
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -21,10 +23,11 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
     );
   }
 
+  // Redirect to login if not authenticated
   if (!isAuthenticated) {
-    // Redirect to login page with a return URL
     return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 
+  // User is authenticated, render the protected content
   return <>{children}</>;
 };

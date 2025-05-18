@@ -2,21 +2,14 @@
 import React, { useEffect } from "react";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { useAuth } from "@/contexts/auth";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 
 const Login = () => {
   const { isAuthenticated, isLoading } = useAuth();
-  const navigate = useNavigate();
 
-  // Redirect to dashboard if already authenticated
-  useEffect(() => {
-    if (isAuthenticated && !isLoading) {
-      navigate("/");
-    }
-  }, [isAuthenticated, isLoading, navigate]);
-
-  if (isAuthenticated) {
-    return <Navigate to="/" />;
+  // If authenticated, redirect to dashboard
+  if (isAuthenticated && !isLoading) {
+    return <Navigate to="/" replace />;
   }
 
   return (
