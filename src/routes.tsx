@@ -12,32 +12,44 @@ import NotFound from "./pages/NotFound";
 import Accounts from "./pages/Accounts";
 import Budgets from "./pages/Budgets";
 import Expenses from "./pages/Expenses";
-import { AuthGuard } from "./components/auth/AuthGuard";
+import { ErrorBoundary } from "./components/ErrorBoundary";
+import { ProtectedRoutes, PublicOnlyRoute } from "./routes/ProtectedRoutes";
 
 const AppRoutes = () => {
   const location = useLocation();
   
   return (
-    <AnimatePresence mode="wait">
-      <Routes location={location} key={location.pathname}>
-        {/* Public routes */}
-        <Route path="/login" element={<Login />} />
-        
-        {/* Protected routes */}
-        <Route path="/" element={<AuthGuard><Dashboard /></AuthGuard>} />
-        <Route path="/calendar" element={<AuthGuard><Calendar /></AuthGuard>} />
-        <Route path="/analytics" element={<AuthGuard><Analytics /></AuthGuard>} />
-        <Route path="/transactions" element={<AuthGuard><Transactions /></AuthGuard>} />
-        <Route path="/documents" element={<AuthGuard><Documents /></AuthGuard>} />
-        <Route path="/accounts" element={<AuthGuard><Accounts /></AuthGuard>} />
-        <Route path="/budgets" element={<AuthGuard><Budgets /></AuthGuard>} />
-        <Route path="/expenses" element={<AuthGuard><Expenses /></AuthGuard>} />
-        <Route path="/settings" element={<AuthGuard><Settings /></AuthGuard>} />
-        
-        {/* Catch-all route */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </AnimatePresence>
+    <ErrorBoundary>
+      <AnimatePresence mode="wait">
+        <Routes location={location} key={location.pathname}>
+          {/* Public routes - accessible when not logged in */}
+          <Route 
+            path="/login" 
+            element={
+              <PublicOnlyRoute>
+                <Login />
+              </PublicOnlyRoute>
+            } 
+          />
+          
+          {/* Protected routes - require authentication */}
+          <Route element={<ProtectedRoutes />}>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/calendar" element={<Calendar />} />
+            <Route path="/analytics" element={<Analytics />} />
+            <Route path="/transactions" element={<Transactions />} />
+            <Route path="/documents" element={<Documents />} />
+            <Route path="/accounts" element={<Accounts />} />
+            <Route path="/budgets" element={<Budgets />} />
+            <Route path="/expenses" element={<Expenses />} />
+            <Route path="/settings" element={<Settings />} />
+          </Route>
+          
+          {/* Catch-all route */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </AnimatePresence>
+    </ErrorBoundary>
   );
 };
 
