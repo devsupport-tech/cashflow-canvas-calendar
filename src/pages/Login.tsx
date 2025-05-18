@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { useAuth } from "@/contexts/auth";
 import { Navigate, useLocation } from "react-router-dom";
@@ -10,9 +10,12 @@ const Login = () => {
   
   // Get the redirect path from location state or default to root
   const from = (location.state as any)?.from || "/";
+  
+  console.log("Login component - isAuthenticated:", isAuthenticated, "redirectTo:", from);
 
   // If authenticated, redirect to the intended page or dashboard
   if (isAuthenticated && !isLoading) {
+    console.log("Redirecting authenticated user to:", from);
     return <Navigate to={from} replace />;
   }
 

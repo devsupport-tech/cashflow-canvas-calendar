@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -48,11 +47,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               name: profile?.name || authUser.email?.split('@')[0] || '',
               avatarUrl: profile?.avatar_url || undefined,
             });
-            
-            // Redirect to dashboard if on login page
-            if (location.pathname === '/login') {
-              navigate('/', { replace: true });
-            }
           }
         }
       } catch (error) {
@@ -88,6 +82,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             
             // Get the intended destination from state, or default to home
             const from = (location.state as any)?.from || '/';
+            console.log('Redirecting to:', from);
             navigate(from, { replace: true });
           } else if (event === 'SIGNED_OUT') {
             setUser(null);
@@ -122,11 +117,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     try {
       await authService.login(email, password);
+      // The redirection will be handled by the auth state change listener
       return Promise.resolve();
     } catch (error) {
-      return Promise.reject(error);
-    } finally {
       setIsLoading(false);
+      return Promise.reject(error);
     }
   };
 
@@ -134,19 +129,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     try {
       await authService.signup(email, password, name);
+      setIsLoading(false);
       return Promise.resolve();
     } catch (error) {
-      return Promise.reject(error);
-    } finally {
       setIsLoading(false);
+      return Promise.reject(error);
     }
   };
 
   const logout = async () => {
     try {
       await authService.logout();
-      setUser(null);
-      navigate('/login', { replace: true });
+      // The redirection will be handled by the auth state change listener
       return Promise.resolve();
     } catch (error) {
       return Promise.reject(error);

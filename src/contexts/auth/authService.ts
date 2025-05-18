@@ -6,14 +6,27 @@ import { User } from './types';
 export const authService = {
   async login(email: string, password: string): Promise<void> {
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error, data } = await supabase.auth.signInWithPassword({ email, password });
       
-      if (error) throw error;
+      if (error) {
+        // Map Supabase error messages to more user-friendly messages
+        let errorMessage = error.message;
+        if (error.message.includes("Invalid login credentials")) {
+          errorMessage = "Incorrect email or password. Please try again.";
+        } else if (error.message.includes("Email not confirmed")) {
+          errorMessage = "Please confirm your email before logging in.";
+        }
+        
+        throw new Error(errorMessage);
+      }
       
-      toast({
-        title: "Logged in successfully",
-        description: "Welcome back!",
-      });
+      // Only show toast if we have a valid user
+      if (data?.user) {
+        toast({
+          title: "Logged in successfully",
+          description: "Welcome back!",
+        });
+      }
       
       return Promise.resolve();
     } catch (error: any) {
@@ -149,3 +162,4 @@ export const authService = {
     }
   }
 };
+
