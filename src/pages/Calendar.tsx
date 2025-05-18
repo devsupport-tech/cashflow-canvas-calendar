@@ -48,6 +48,10 @@ const Calendar = () => {
     return txDate.toDateString() === dateRange.from.toDateString();
   });
 
+  // Determine the workspace filter type for ExpenseCalendar
+  const workspaceFilterType = currentWorkspace === 'all' || currentWorkspace === 'personal' ? 
+    currentWorkspace : 'business';
+
   return (
     <MainLayout>
       <div className="max-w-5xl mx-auto space-y-8">
@@ -116,7 +120,7 @@ const Calendar = () => {
             selectedDate={selectedDate}
             setSelectedDate={setSelectedDate}
             viewType="month"
-            workspaceFilter={currentWorkspace}
+            workspaceFilter={workspaceFilterType}
             timeRange={timeRange}
           />
         ) : (

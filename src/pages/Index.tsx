@@ -10,6 +10,10 @@ import { useWorkspace } from '@/contexts/WorkspaceContext';
 const Index = () => {
   const { currentWorkspace } = useWorkspace();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  
+  // Determine the workspace filter type for ExpenseCalendar
+  const workspaceFilterType = currentWorkspace === 'all' || currentWorkspace === 'personal' ? 
+    currentWorkspace : 'business';
 
   return (
     <MainLayout>
@@ -47,7 +51,7 @@ const Index = () => {
           selectedDate={selectedDate}
           setSelectedDate={setSelectedDate}
           viewType="month"
-          workspaceFilter={currentWorkspace}
+          workspaceFilter={workspaceFilterType}
         />
       </div>
     </MainLayout>
