@@ -2,6 +2,7 @@
 import React, { useEffect } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -20,9 +21,11 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse text-center">
-          <div className="h-8 w-8 mx-auto rounded-full bg-primary/20"></div>
-          <p className="mt-4 text-muted-foreground">Loading...</p>
+        <div className="space-y-4 w-full max-w-md">
+          <Skeleton className="h-12 w-3/4 mx-auto" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-5/6" />
+          <Skeleton className="h-64 w-full" />
         </div>
       </div>
     );

@@ -43,7 +43,9 @@ export const LoginForm = () => {
     }
   };
 
-  const isFormDisabled = isLoading || submitting;
+  // Only disable the form when submitting, not when isLoading from context
+  // This ensures users can type in the form even when auth state is being checked
+  const isFormDisabled = submitting;
   
   return (
     <Card className="w-full max-w-md mx-auto">
@@ -97,7 +99,7 @@ export const LoginForm = () => {
             </CardContent>
             <CardFooter>
               <Button type="submit" className="w-full" disabled={isFormDisabled}>
-                {isFormDisabled ? (
+                {submitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Logging in...
                   </>
@@ -149,7 +151,7 @@ export const LoginForm = () => {
             </CardContent>
             <CardFooter>
               <Button type="submit" className="w-full" disabled={isFormDisabled}>
-                {isFormDisabled ? (
+                {submitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Creating account...
                   </>

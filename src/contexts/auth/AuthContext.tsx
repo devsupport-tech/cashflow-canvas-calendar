@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -52,6 +53,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } catch (error) {
         console.error('Error checking authentication:', error);
       } finally {
+        // Make sure we set isLoading to false regardless of success or failure
         setIsLoading(false);
       }
     };
@@ -80,12 +82,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               avatarUrl: profile?.avatar_url || undefined,
             });
             
+            setIsLoading(false);
+            
             // Get the intended destination from state, or default to home
             const from = (location.state as any)?.from || '/';
             console.log('Redirecting to:', from);
             navigate(from, { replace: true });
           } else if (event === 'SIGNED_OUT') {
             setUser(null);
+            setIsLoading(false);
             navigate('/login', { replace: true });
           }
         }
@@ -97,6 +102,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (error) {
       console.error('Error setting up auth listener:', error);
+      setIsLoading(false); // Ensure loading state is reset on error
     }
 
     checkAuth();
