@@ -1,6 +1,8 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from "@/components/ui/use-toast";
+import { supabase } from '@/lib/supabase';
+import { useNavigate } from 'react-router-dom';
 
 type User = {
   id: string;
@@ -34,15 +36,35 @@ const AuthContext = createContext<AuthContextType>({
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
 
-  // Check if user is already logged in (from localStorage for now)
+  // Check if user is already logged in
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        // For now, we're using localStorage, but this will be replaced with Supabase
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-          setUser(JSON.parse(storedUser));
+        setIsLoading(true);
+        
+        // Get session and user
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session) {
+          const { data: { user: authUser } } = await supabase.auth.getUser();
+          
+          if (authUser) {
+            // Get user profile data
+            const { data: profile } = await supabase
+              .from('user_profiles')
+              .select('*')
+              .eq('id', authUser.id)
+              .single();
+              
+            setUser({
+              id: authUser.id,
+              email: authUser.email || '',
+              name: profile?.name || authUser.email?.split('@')[0] || '',
+              avatarUrl: profile?.avatar_url || undefined,
+            });
+          }
         }
       } catch (error) {
         console.error('Error checking authentication:', error);
@@ -51,33 +73,59 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
 
+    // Set up auth state change listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === 'SIGNED_IN' && session) {
+          const { user: authUser } = session;
+          
+          // Get user profile data
+          const { data: profile } = await supabase
+            .from('user_profiles')
+            .select('*')
+            .eq('id', authUser.id)
+            .single();
+            
+          setUser({
+            id: authUser.id,
+            email: authUser.email || '',
+            name: profile?.name || authUser.email?.split('@')[0] || '',
+            avatarUrl: profile?.avatar_url || undefined,
+          });
+        } else if (event === 'SIGNED_OUT') {
+          setUser(null);
+          navigate('/login');
+        }
+      }
+    );
+
     checkAuth();
-  }, []);
+
+    // Cleanup the subscription
+    return () => {
+      subscription?.unsubscribe();
+    };
+  }, [navigate]);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      // Mock login for now - will be replaced with Supabase
-      const mockUser = {
-        id: `user-${Date.now()}`,
-        email,
-        name: email.split('@')[0],
-      };
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
       
-      localStorage.setItem('user', JSON.stringify(mockUser));
-      setUser(mockUser);
+      if (error) throw error;
       
       toast({
         title: "Logged in successfully",
-        description: `Welcome back, ${mockUser.name}!`,
+        description: "Welcome back!",
       });
       
+      navigate('/');
       return Promise.resolve();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login error:', error);
       toast({
         title: "Login failed",
-        description: "Invalid credentials. Please try again.",
+        description: error.message || "Invalid credentials. Please try again.",
         variant: "destructive",
       });
       
@@ -90,27 +138,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signup = async (email: string, password: string, name?: string) => {
     setIsLoading(true);
     try {
-      // Mock signup for now - will be replaced with Supabase
-      const mockUser = {
-        id: `user-${Date.now()}`,
-        email,
-        name: name || email.split('@')[0],
-      };
+      const { data, error } = await supabase.auth.signUp({ email, password });
       
-      localStorage.setItem('user', JSON.stringify(mockUser));
-      setUser(mockUser);
+      if (error) throw error;
+      
+      // Create user profile
+      if (data.user) {
+        const { error: profileError } = await supabase
+          .from('user_profiles')
+          .insert({
+            id: data.user.id,
+            email,
+            name: name || email.split('@')[0],
+            created_at: new Date().toISOString(),
+          });
+          
+        if (profileError) throw profileError;
+      }
       
       toast({
         title: "Account created",
-        description: "Your account has been created successfully.",
+        description: "Your account has been created successfully. Please check your email to confirm your account.",
       });
       
       return Promise.resolve();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Signup error:', error);
       toast({
         title: "Signup failed",
-        description: "Could not create your account. Please try again.",
+        description: error.message || "Could not create your account. Please try again.",
         variant: "destructive",
       });
       
@@ -122,9 +178,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     try {
-      // Mock logout - will be replaced with Supabase
-      localStorage.removeItem('user');
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) throw error;
+      
       setUser(null);
+      navigate('/login');
       
       toast({
         title: "Logged out",
@@ -132,11 +191,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       
       return Promise.resolve();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Logout error:', error);
       toast({
         title: "Logout failed",
-        description: "Could not log you out. Please try again.",
+        description: error.message || "Could not log you out. Please try again.",
         variant: "destructive",
       });
       
@@ -146,18 +205,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const resetPassword = async (email: string) => {
     try {
-      // Mock password reset - will be replaced with Supabase
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      
+      if (error) throw error;
+      
       toast({
         title: "Password reset email sent",
         description: "Check your email for instructions to reset your password.",
       });
       
       return Promise.resolve();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Password reset error:', error);
       toast({
         title: "Password reset failed",
-        description: "Could not send reset email. Please try again.",
+        description: error.message || "Could not send reset email. Please try again.",
         variant: "destructive",
       });
       
@@ -167,24 +231,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const updateProfile = async (data: Partial<User>) => {
     try {
-      // Mock profile update - will be replaced with Supabase
-      if (user) {
-        const updatedUser = { ...user, ...data };
-        localStorage.setItem('user', JSON.stringify(updatedUser));
-        setUser(updatedUser);
+      if (!user?.id) throw new Error("Not authenticated");
+      
+      // Update user profile in database
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({
+          name: data.name,
+          avatar_url: data.avatarUrl,
+        })
+        .eq('id', user.id);
         
-        toast({
-          title: "Profile updated",
-          description: "Your profile has been updated successfully.",
-        });
-      }
+      if (error) throw error;
+      
+      // Update local state
+      setUser(current => current ? { ...current, ...data } : null);
+      
+      toast({
+        title: "Profile updated",
+        description: "Your profile has been updated successfully.",
+      });
       
       return Promise.resolve();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Profile update error:', error);
       toast({
         title: "Profile update failed",
-        description: "Could not update your profile. Please try again.",
+        description: error.message || "Could not update your profile. Please try again.",
         variant: "destructive",
       });
       

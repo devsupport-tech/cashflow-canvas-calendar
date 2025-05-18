@@ -27,7 +27,6 @@ export const ExpenseActions: React.FC<ExpenseActionsProps> = ({
   onImport
 }) => {
   const [isExporting, setIsExporting] = React.useState(false);
-  const [isImporting, setIsImporting] = React.useState(false);
   const [importDialogOpen, setImportDialogOpen] = React.useState(false);
 
   const handleExport = () => {
@@ -76,7 +75,6 @@ export const ExpenseActions: React.FC<ExpenseActionsProps> = ({
         variant="outline" 
         className="gap-1" 
         onClick={() => setImportDialogOpen(true)}
-        disabled={isImporting}
       >
         <Upload className="h-4 w-4" />
         Import

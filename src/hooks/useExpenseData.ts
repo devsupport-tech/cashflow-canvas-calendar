@@ -1,119 +1,208 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { ExpenseItem } from '@/components/expenses/ExpenseCard';
+import { supabase } from '@/lib/supabase';
+import { toast } from '@/components/ui/use-toast';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 export const useExpenseData = () => {
   const { currentWorkspace } = useWorkspace();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
   const [expenseFilter, setExpenseFilter] = useState('all');
   const [advancedFiltersOpen, setAdvancedFiltersOpen] = useState(false);
   const [dateFilter, setDateFilter] = useState<Date | undefined>(undefined);
   const [sortBy, setSortBy] = useState<'date' | 'amount'>('date');
-  
-  // Load expenses from localStorage or use defaults
-  const [expenses, setExpenses] = useState<ExpenseItem[]>(() => {
-    const savedExpenses = localStorage.getItem('expenses');
-    if (savedExpenses) {
-      try {
-        return JSON.parse(savedExpenses);
-      } catch (e) {
-        console.error("Failed to parse saved expenses:", e);
-      }
-    }
+
+  // Fetch expenses from Supabase
+  const fetchExpenses = async (): Promise<ExpenseItem[]> => {
+    if (!user) return [];
     
-    // Default expenses
-    return [
-      { 
-        id: 1, 
-        description: 'Weekly Groceries', 
-        amount: 125.42, 
-        date: '2023-06-15', 
-        category: 'personal',
-        expenseType: 'food'
-      },
-      { 
-        id: 2, 
-        description: 'Netflix Subscription', 
-        amount: 15.99, 
-        date: '2023-06-12', 
-        category: 'personal',
-        expenseType: 'subscription'
-      },
-      { 
-        id: 3, 
-        description: 'Adobe Creative Cloud', 
-        amount: 52.99, 
-        date: '2023-06-10', 
-        category: 'business',
-        expenseType: 'subscription'
-      },
-      { 
-        id: 4, 
-        description: 'Client Meeting Lunch', 
-        amount: 78.25, 
-        date: '2023-06-08', 
-        category: 'business',
-        expenseType: 'food'
-      },
-      { 
-        id: 5, 
-        description: 'Office Supplies', 
-        amount: 34.56, 
-        date: '2023-06-05', 
-        category: 'business',
-        expenseType: 'office'
-      },
-      { 
-        id: 6, 
-        description: 'Uber Ride', 
-        amount: 22.15, 
-        date: '2023-06-02', 
-        category: 'personal',
-        expenseType: 'transportation'
-      },
-    ];
+    try {
+      const { data, error } = await supabase
+        .from('expenses')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('date', { ascending: false });
+        
+      if (error) throw error;
+      
+      return data.map(expense => ({
+        id: expense.id,
+        description: expense.description,
+        amount: expense.amount,
+        date: expense.date,
+        category: expense.category,
+        expenseType: expense.expense_type
+      }));
+      
+    } catch (error) {
+      console.error('Error fetching expenses:', error);
+      toast({
+        title: "Failed to load expenses",
+        description: "There was an error loading your expenses. Please refresh the page.",
+        variant: "destructive"
+      });
+      return [];
+    }
+  };
+  
+  // Use React Query to fetch expenses
+  const { data: expenses = [] } = useQuery({
+    queryKey: ['expenses', user?.id],
+    queryFn: fetchExpenses,
+    enabled: !!user
   });
   
-  // Save expenses to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem('expenses', JSON.stringify(expenses));
-  }, [expenses]);
-  
   // Add new expense
-  const addExpense = (expense: ExpenseItem) => {
-    setExpenses(prev => [...prev, expense]);
-  };
+  const addExpenseMutation = useMutation({
+    mutationFn: async (expense: Omit<ExpenseItem, 'id'>) => {
+      if (!user) throw new Error("User not authenticated");
+      
+      const { data, error } = await supabase
+        .from('expenses')
+        .insert({
+          description: expense.description,
+          amount: expense.amount,
+          date: expense.date,
+          category: expense.category,
+          expense_type: expense.expenseType,
+          user_id: user.id,
+          created_at: new Date().toISOString()
+        })
+        .select();
+        
+      if (error) throw error;
+      return data[0];
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['expenses'] });
+      toast({
+        title: "Expense added",
+        description: "Your expense has been added successfully."
+      });
+    },
+    onError: (error) => {
+      console.error('Error adding expense:', error);
+      toast({
+        title: "Failed to add expense",
+        description: "There was an error adding your expense. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
   
   // Update an expense
-  const updateExpense = (updatedExpense: ExpenseItem) => {
-    setExpenses(prev => 
-      prev.map(expense => 
-        expense.id === updatedExpense.id ? updatedExpense : expense
-      )
-    );
-  };
+  const updateExpenseMutation = useMutation({
+    mutationFn: async (expense: ExpenseItem) => {
+      if (!user) throw new Error("User not authenticated");
+      
+      const { error } = await supabase
+        .from('expenses')
+        .update({
+          description: expense.description,
+          amount: expense.amount,
+          date: expense.date,
+          category: expense.category,
+          expense_type: expense.expenseType
+        })
+        .eq('id', expense.id)
+        .eq('user_id', user.id);
+        
+      if (error) throw error;
+      return expense;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['expenses'] });
+      toast({
+        title: "Expense updated",
+        description: "Your expense has been updated successfully."
+      });
+    },
+    onError: (error) => {
+      console.error('Error updating expense:', error);
+      toast({
+        title: "Failed to update expense",
+        description: "There was an error updating your expense. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
   
   // Delete an expense
-  const deleteExpense = (expenseId: number) => {
-    setExpenses(prev => prev.filter(expense => expense.id !== expenseId));
-  };
+  const deleteExpenseMutation = useMutation({
+    mutationFn: async (expenseId: number) => {
+      if (!user) throw new Error("User not authenticated");
+      
+      const { error } = await supabase
+        .from('expenses')
+        .delete()
+        .eq('id', expenseId)
+        .eq('user_id', user.id);
+        
+      if (error) throw error;
+      return expenseId;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['expenses'] });
+      toast({
+        title: "Expense deleted",
+        description: "Your expense has been deleted successfully."
+      });
+    },
+    onError: (error) => {
+      console.error('Error deleting expense:', error);
+      toast({
+        title: "Failed to delete expense",
+        description: "There was an error deleting your expense. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
   
   // Import expenses
-  const importExpenses = (newExpenses: ExpenseItem[]) => {
-    // Check for potential duplicates by ID
-    const existingIds = new Set(expenses.map(e => e.id));
-    const uniqueNewExpenses = newExpenses.map(expense => {
-      // If ID already exists, create a new one
-      if (existingIds.has(expense.id)) {
-        return { ...expense, id: Math.floor(Math.random() * 1000000) };
-      }
-      return expense;
-    });
-    
-    setExpenses(prev => [...prev, ...uniqueNewExpenses]);
-  };
-  
+  const importExpensesMutation = useMutation({
+    mutationFn: async (newExpenses: ExpenseItem[]) => {
+      if (!user) throw new Error("User not authenticated");
+      
+      // Format expenses for Supabase
+      const expensesToInsert = newExpenses.map(expense => ({
+        description: expense.description,
+        amount: expense.amount,
+        date: expense.date,
+        category: expense.category,
+        expense_type: expense.expenseType,
+        user_id: user.id,
+        created_at: new Date().toISOString()
+      }));
+      
+      const { error } = await supabase
+        .from('expenses')
+        .insert(expensesToInsert);
+        
+      if (error) throw error;
+      return newExpenses;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['expenses'] });
+      toast({
+        title: "Expenses imported",
+        description: `Successfully imported ${data.length} expenses.`
+      });
+    },
+    onError: (error) => {
+      console.error('Error importing expenses:', error);
+      toast({
+        title: "Failed to import expenses",
+        description: "There was an error importing your expenses. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
+
   // Filter expenses based on selected workspace and expense type
   const filteredExpenses = useMemo(() => {
     return expenses.filter(expense => {
@@ -183,9 +272,9 @@ export const useExpenseData = () => {
     sortedExpenses,
     totalAmount,
     workspaceDisplay,
-    addExpense,
-    updateExpense,
-    deleteExpense,
-    importExpenses
+    addExpense: (expense: Omit<ExpenseItem, 'id'>) => addExpenseMutation.mutate(expense),
+    updateExpense: (expense: ExpenseItem) => updateExpenseMutation.mutate(expense),
+    deleteExpense: (expenseId: number) => deleteExpenseMutation.mutate(expenseId),
+    importExpenses: (newExpenses: ExpenseItem[]) => importExpensesMutation.mutate(newExpenses)
   };
 };

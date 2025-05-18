@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { MainLayout } from '@/layouts/MainLayout';
 import { toast } from '@/components/ui/use-toast';
 import { ExpenseSummary } from '@/components/expenses/ExpenseSummary';
@@ -27,6 +27,8 @@ const Expenses = () => {
     sortedExpenses,
     totalAmount,
     workspaceDisplay,
+    updateExpense,
+    deleteExpense,
     importExpenses
   } = useExpenseData();
   
@@ -36,19 +38,11 @@ const Expenses = () => {
   };
   
   const handleDeleteExpense = (expenseId: number) => {
-    // In a real app, this would delete the expense
-    toast({
-      title: "Expense Deleted",
-      description: "The expense has been deleted successfully.",
-    });
+    deleteExpense(expenseId);
   };
 
   const handleImportExpenses = (importedExpenses: ExpenseItem[]) => {
     importExpenses(importedExpenses);
-    toast({
-      title: "Expenses Imported",
-      description: `Successfully imported ${importedExpenses.length} expenses.`,
-    });
   };
   
   return (
