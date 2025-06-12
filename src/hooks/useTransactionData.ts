@@ -57,7 +57,11 @@ export const useTransactionData = () => {
     }
   };
 
-  const { data: transactions = [], isLoading, error } = useQuery(['transactions', user?.id, currentWorkspace], fetchTransactions, {
+  const { data: transactions = [], isLoading, error } = useQuery({
+    queryKey: ['transactions', user?.id, currentWorkspace],
+    queryFn: fetchTransactions,
+    enabled: !!user,
+  });
     enabled: !!user,
   });
 
