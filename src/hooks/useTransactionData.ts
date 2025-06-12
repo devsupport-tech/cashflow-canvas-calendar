@@ -62,8 +62,6 @@ export const useTransactionData = () => {
     queryFn: fetchTransactions,
     enabled: !!user,
   });
-    enabled: !!user,
-  });
 
   // Add transaction
   const addTransactionMutation = useMutation({
