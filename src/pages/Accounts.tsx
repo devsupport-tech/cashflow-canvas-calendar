@@ -41,7 +41,7 @@ const Accounts = () => {
     setAddAccountOpen(true);
   };
 
-  const handleEditAccount = (account: any) => {
+  const handleEditAccount = (account: AccountCardProps["account"]) => {
     setEditAccountId(account.id);
     setFormData({
       name: account.name || '',
@@ -52,7 +52,7 @@ const Accounts = () => {
     setAddAccountOpen(true);
   };
 
-  const handleDeleteAccount = (account: any) => {
+  const handleDeleteAccount = (account: AccountCardProps["account"]) => {
     if (window.confirm(`Are you sure you want to delete account "${account.name}"? This action cannot be undone.`)) {
       deleteAccount(account.id)
         .then(() => {
@@ -202,7 +202,12 @@ const Accounts = () => {
             {filteredAccounts
               .filter(account => account.type === 'checking')
               .map(account => (
-                <AccountCard key={account.id} account={account} />
+                <AccountCard
+                  key={account.id}
+                  account={account}
+                  onEdit={() => handleEditAccount(account)}
+                  onDelete={() => handleDeleteAccount(account)}
+                />
               ))}
           </TabsContent>
           
@@ -210,7 +215,12 @@ const Accounts = () => {
             {filteredAccounts
               .filter(account => account.type === 'savings')
               .map(account => (
-                <AccountCard key={account.id} account={account} />
+                <AccountCard
+                  key={account.id}
+                  account={account}
+                  onEdit={() => handleEditAccount(account)}
+                  onDelete={() => handleDeleteAccount(account)}
+                />
               ))}
           </TabsContent>
           
@@ -218,14 +228,15 @@ const Accounts = () => {
             {filteredAccounts
               .filter(account => account.type === 'credit')
               .map(account => (
-                <AccountCard key={account.id} account={account} />
+                <AccountCard
+                  key={account.id}
+                  account={account}
+                  onEdit={() => handleEditAccount(account)}
+                  onDelete={() => handleDeleteAccount(account)}
+                />
               ))}
           </TabsContent>
         </Tabs>
-      </div>
-    </MainLayout>
-  );
-};
 
 interface AccountCardProps {
   account: {
@@ -286,4 +297,3 @@ const AccountCard: React.FC<AccountCardProps> = ({ account, onEdit, onDelete }) 
   );
 };
 
-export default Accounts;

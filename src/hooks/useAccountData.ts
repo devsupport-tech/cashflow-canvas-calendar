@@ -7,7 +7,7 @@ export function useAccountData() {
   const queryClient = useQueryClient();
 
   // Fetch all accounts
-  const { data: accounts = [], isLoading, error } = useQuery<Account[]>({
+  const { data: accounts = [], isLoading, error } = useQuery({
     queryKey: ['accounts'],
     queryFn: async () => {
       const { data, error } = await supabase

@@ -17,7 +17,3 @@ export const EmptyBusinessState = ({ onAddClick }: { onAddClick: () => void }) =
     </Button>
   </div>
 );
-      </Button>
-    </div>
-  );
-};
