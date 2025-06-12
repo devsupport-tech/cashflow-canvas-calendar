@@ -11,6 +11,65 @@ import { Dialog, DialogTrigger } from '@/components/ui/dialog';
 import { useAccountData } from '@/hooks/useAccountData';
 import AccountForm from '@/components/accounts/AccountForm';
 
+interface AccountCardProps {
+  account: {
+    id: string | number;
+    name: string;
+    type: string;
+    balance: number;
+    category: string;
+  };
+  onEdit?: () => void;
+  onDelete?: () => void;
+}
+
+const AccountCard: React.FC<AccountCardProps> = ({ account, onEdit, onDelete }) => {
+  const accountTypeIcon = {
+    checking: <CreditCard className="h-5 w-5 text-primary" />,
+    savings: <CreditCard className="h-5 w-5 text-emerald-500" />,
+    credit: <CreditCard className="h-5 w-5 text-bright-orange" />
+  }[account.type];
+  
+  return (
+    <Card className="card-hover animate-slide-up">
+      <CardContent className="p-6">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            {accountTypeIcon}
+            <div>
+              <h3 className="font-medium">{account.name}</h3>
+              <p className="text-xs text-muted-foreground capitalize">{account.type}</p>
+            </div>
+          </div>
+          <div className="text-right flex flex-col items-end gap-2">
+            <p className={`font-semibold text-lg ${account.balance >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+              {account.balance >= 0 ? '$' : '-$'}{Math.abs(account.balance).toFixed(2)}
+            </p>
+            <div className="flex gap-1 items-center">
+              <Badge className={`text-xs ${
+                account.category === 'business' ? 'bg-ocean-blue text-white' : 
+                'bg-bright-orange text-white'
+              }`}>
+                {account.category}
+              </Badge>
+              {onEdit && (
+                <Button onClick={onEdit} title="Edit Account">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M16.862 3.487a2.1 2.1 0 0 1 2.97 2.97l-9.193 9.194a2 2 0 0 1-.707.464l-3.23 1.076a.5.5 0 0 1-.635-.634l1.077-3.23a2 2 0 0 1 .463-.707l9.194-9.193Z"/></svg>
+                </Button>
+              )}
+              {onDelete && (
+                <Button onClick={onDelete} title="Delete Account">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M3 6h18M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M10 11v6M14 11v6M5 6v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V6"/></svg>
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
 const Accounts = () => {
   const { currentWorkspace } = useWorkspace();
   const [addAccountOpen, setAddAccountOpen] = React.useState(false);
@@ -234,39 +293,6 @@ const Accounts = () => {
                   onEdit={() => handleEditAccount(account)}
                   onDelete={() => handleDeleteAccount(account)}
                 />
-              ))}
-          </TabsContent>
-        </Tabs>
-
-interface AccountCardProps {
-  account: {
-    id: string | number;
-    name: string;
-    type: string;
-    balance: number;
-    category: string;
-  };
-  onEdit?: () => void;
-  onDelete?: () => void;
-}
-
-const AccountCard: React.FC<AccountCardProps> = ({ account, onEdit, onDelete }) => {
-  const accountTypeIcon = {
-    checking: <CreditCard className="h-5 w-5 text-primary" />,
-    savings: <CreditCard className="h-5 w-5 text-emerald-500" />,
-    credit: <CreditCard className="h-5 w-5 text-bright-orange" />
-  }[account.type];
-  
-  return (
-    <Card className="card-hover animate-slide-up">
-      <CardContent className="p-6">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            {accountTypeIcon}
-            <div>
-              <h3 className="font-medium">{account.name}</h3>
-              <p className="text-xs text-muted-foreground capitalize">{account.type}</p>
-            </div>
           </div>
           <div className="text-right flex flex-col items-end gap-2">
             <p className={`font-semibold text-lg ${account.balance >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
