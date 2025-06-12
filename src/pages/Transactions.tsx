@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { MainLayout } from '@/layouts/MainLayout';
 import { TransactionList } from '@/components/TransactionList';
-import { dummyTransactions } from '@/lib/dummyData';
+import { useTransactionData } from '@/hooks/useTransactionData';
 import { Button } from '@/components/ui/button';
 import { Plus, Upload, Download, Filter } from 'lucide-react';
 import { Dialog, DialogTrigger } from '@/components/ui/dialog';
@@ -23,25 +23,25 @@ const Transactions = () => {
   const [importOpen, setImportOpen] = useState(false);
   const [transactionTypeFilter, setTransactionTypeFilter] = useState('all');
   const [isExporting, setIsExporting] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState(null);
   
   // Fix: Adjust the dateRange state to use the proper DateRange type
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   
   const { currentWorkspace } = useWorkspace();
   
-  // Filter transactions based on selected filters and workspace
-  const filteredTransactions = dummyTransactions.filter(t => {
-    // Filter by workspace
-    if (currentWorkspace !== 'all' && t.category && t.category !== currentWorkspace) {
-      return false;
-    }
-    
+  // Use live transactions from backend
+  const { transactions, isLoading, error, addTransaction, updateTransaction, deleteTransaction } = useTransactionData();
+
+  // Apply date range and type filter client-side
+  const filteredTransactions = transactions.filter(t => {
     // Filter by date range
     if (dateRange?.from && dateRange?.to) {
       const txDate = new Date(t.date);
-      return txDate >= dateRange.from && txDate <= dateRange.to;
+      if (txDate < dateRange.from || txDate > dateRange.to) return false;
     }
-    
+    // Transaction type filter
+    if (transactionTypeFilter !== 'all' && t.type !== transactionTypeFilter) return false;
     return true;
   });
 
@@ -80,14 +80,23 @@ const Transactions = () => {
           <div className="flex flex-wrap items-center gap-2">
             <WorkspaceSwitcher />
             
-            <Dialog open={formOpen} onOpenChange={setFormOpen}>
+            <Dialog open={formOpen} onOpenChange={(open) => {
+              setFormOpen(open);
+              if (!open) setEditingTransaction(null);
+            }}>
               <DialogTrigger asChild>
                 <Button className="gap-1">
                   <Plus className="h-4 w-4" />
                   Add Transaction
                 </Button>
               </DialogTrigger>
-              <ExpenseForm onClose={() => setFormOpen(false)} />
+              <ExpenseForm 
+                onClose={() => {
+                  setFormOpen(false);
+                  setEditingTransaction(null);
+                }}
+                initialExpense={editingTransaction}
+              />
             </Dialog>
             
             <Button variant="outline" onClick={() => setImportOpen(true)} className="gap-1">
@@ -136,7 +145,61 @@ const Transactions = () => {
           </TabsList>
           
           <TabsContent value="list" className="pt-4">
-            <TransactionList transactions={filteredTransactions} />
+            {isLoading ? (
+              <div className="flex flex-col gap-2 py-8">
+                {/* Premium animated skeletons for transaction rows */}
+                {[1,2,3,4,5].map(i => (
+                  <div key={i} className="animate-fade-in">
+                    <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-muted to-secondary/80 rounded-lg animate-pulse">
+                      <div className="h-8 w-8 rounded-full bg-muted-foreground/20" />
+                      <div className="flex-1 space-y-2">
+                        <div className="h-4 w-1/3 rounded bg-muted-foreground/20" />
+                        <div className="h-3 w-1/4 rounded bg-muted-foreground/10" />
+                      </div>
+                      <div className="h-6 w-12 rounded bg-muted-foreground/20" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : error ? (
+              <div className="flex flex-col items-center justify-center py-8 text-destructive animate-fade-in">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" className="mb-2 animate-bounce">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none" />
+                  <path d="M12 8v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  <circle cx="12" cy="16" r="1" fill="currentColor" />
+                </svg>
+                <div>Error loading transactions.</div>
+                <button className="mt-2 underline" onClick={() => window.location.reload()}>Retry</button>
+              </div>
+            ) : filteredTransactions.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 animate-fade-in">
+                <img src="/assets/transactions-empty.svg" alt="No transactions" className="w-24 h-24 mb-4 opacity-80" aria-hidden="true" />
+                <div className="font-semibold text-lg mb-2">No transactions yet</div>
+                <div className="text-muted-foreground mb-4">Add your first transaction to start tracking your finances!</div>
+                <Button onClick={() => setFormOpen(true)} autoFocus>
+                  <Plus className="h-4 w-4" /> Add Transaction
+                </Button>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {filteredTransactions.map((tx, idx) => (
+                  <div key={tx.id} className="animate-fade-in" style={{ animationDelay: `${idx * 40}ms` }}>
+                    <TransactionList 
+                      transactions={[tx]} 
+                      onEdit={(transaction) => {
+                        setFormOpen(true);
+                        setEditingTransaction(transaction);
+                      }}
+                      onDelete={async (id) => {
+                        if (window.confirm('Are you sure you want to delete this transaction?')) {
+                          await deleteTransaction(id);
+                        }
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
           </TabsContent>
           
           <TabsContent value="calendar" className="pt-4">

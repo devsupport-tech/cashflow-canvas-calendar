@@ -49,13 +49,19 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
   });
 
   return (
-    <DialogContent className="sm:max-w-[425px] animate-in slide-up">
+    <DialogContent
+      className="sm:max-w-[425px] animate-in slide-up"
+      aria-labelledby="expense-form-dialog-title"
+      aria-describedby="expense-form-dialog-description"
+    >
       <ExpenseFormHeader 
         transactionType={transactionType} 
         onTransactionTypeChange={setTransactionType}
         isEditing={!!initialExpense} 
       />
-      
+      {/* Add visually hidden heading and description for accessibility */}
+      <h2 id="expense-form-dialog-title" className="sr-only">{initialExpense ? 'Edit Expense' : 'Add Expense'}</h2>
+      <p id="expense-form-dialog-description" className="sr-only">{initialExpense ? 'Update your expense details below.' : 'Add a new expense to your records.'}</p>
       <form onSubmit={handleSubmit} className="space-y-4">
         <BasicFormFields 
           description={description}

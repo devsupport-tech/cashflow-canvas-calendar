@@ -21,7 +21,16 @@ export const RecentTransactionsSection: React.FC<RecentTransactionsSectionProps>
         </Button>
       </CardHeader>
       <CardContent>
-        <RecentTransactions transactions={transactions.slice(0, 5)} />
+        {(!transactions || transactions.length === 0) ? (
+          <div className="flex flex-col items-center justify-center py-8 animate-fade-in">
+            <img src="/assets/dashboard-empty.svg" alt="No recent transactions" className="w-20 h-20 mb-3 opacity-80" aria-hidden="true" />
+            <div className="font-semibold text-base mb-1">No recent transactions</div>
+            <div className="text-muted-foreground mb-2">Add transactions to see your recent activity.</div>
+            <a href="/transactions" tabIndex={0} className="underline text-primary">Go to Transactions</a>
+          </div>
+        ) : (
+          <RecentTransactions transactions={transactions.slice(0, 5)} />
+        )}
       </CardContent>
     </Card>
   );

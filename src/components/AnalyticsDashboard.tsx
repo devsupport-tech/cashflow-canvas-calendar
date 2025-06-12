@@ -36,6 +36,10 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ summary 
     business: month.expenses.business,
     income: month.income
   }));
+
+  const noSummaryData = !summary.monthlySummary || summary.monthlySummary.length === 0 || summary.monthlySummary.every(m => m.income === 0 && m.expenses.personal === 0 && m.expenses.business === 0);
+  const noPersonalCategories = !summary.categoryTotals.personal || summary.categoryTotals.personal.length === 0;
+  const noBusinessCategories = !summary.categoryTotals.business || summary.categoryTotals.business.length === 0;
   
   // Format category data for pie charts
   const formatCategoryData = (categories: CategoryTotal[]) => {
@@ -139,19 +143,23 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ summary 
           <CardTitle className="text-base font-medium">Monthly Overview</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={monthlyData} margin={{ top: 20, right: 30, left: isMobile ? 0 : 20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                <XAxis dataKey="name" />
-                <YAxis tickFormatter={(value) => `$${value}`} width={isMobile ? 35 : 60} />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="income" name="Income" fill="hsl(var(--income))" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="personal" name="Personal" fill="hsl(var(--expense-personal))" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="business" name="Business" fill="hsl(var(--expense-business))" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          {noSummaryData ? (
+            <div className="p-4 text-muted-foreground text-center">No summary data available.</div>
+          ) : (
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={monthlyData} margin={{ top: 20, right: 30, left: isMobile ? 0 : 20, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+                  <XAxis dataKey="name" />
+                  <YAxis tickFormatter={(value) => `$${value}`} width={isMobile ? 35 : 60} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Bar dataKey="income" name="Income" fill="hsl(var(--income))" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="personal" name="Personal" fill="hsl(var(--expense-personal))" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="business" name="Business" fill="hsl(var(--expense-business))" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
         </CardContent>
       </Card>
       
@@ -175,21 +183,29 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ summary 
           </TabsList>
           
           <TabsContent value="personal" className="pt-4">
-            <div className="grid grid-cols-1 gap-6">
-              <PieChartWithCategories 
-                data={personalCategoriesData} 
-                title="Personal Expenses by Category" 
-              />
-            </div>
+            {noPersonalCategories ? (
+              <div className="p-4 text-muted-foreground text-center">No expenses found.</div>
+            ) : (
+              <div className="grid grid-cols-1 gap-6">
+                <PieChartWithCategories 
+                  data={personalCategoriesData} 
+                  title="Personal Expenses by Category" 
+                />
+              </div>
+            )}
           </TabsContent>
           
           <TabsContent value="business" className="pt-4">
-            <div className="grid grid-cols-1 gap-6">
-              <PieChartWithCategories 
-                data={businessCategoriesData} 
-                title="Business Expenses by Category" 
-              />
-            </div>
+            {noBusinessCategories ? (
+              <div className="p-4 text-muted-foreground text-center">No expenses found.</div>
+            ) : (
+              <div className="grid grid-cols-1 gap-6">
+                <PieChartWithCategories 
+                  data={businessCategoriesData} 
+                  title="Business Expenses by Category" 
+                />
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </div>

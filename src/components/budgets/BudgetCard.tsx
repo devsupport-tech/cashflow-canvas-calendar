@@ -58,26 +58,28 @@ export const BudgetCard: React.FC<BudgetCardProps> = ({
   };
   
   return (
-    <Card 
-      className="card-hover animate-slide-up" 
+    <Card
+      className="card-hover animate-slide-up focus-visible:ring-2 focus-visible:ring-primary"
       style={{ animationDelay: `${animationDelay}s` }}
+      role="region"
+      aria-labelledby={`budget-card-title-${budget.id}`}
     >
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
-          <CardTitle className="text-lg">{budget.name}</CardTitle>
+          <CardTitle id={`budget-card-title-${budget.id}`} className="text-lg">{budget.name}</CardTitle>
           <Badge 
             variant="outline" 
             className={`flex items-center gap-1 ${categoryOption.color} text-white`}
           >
-            <div className="w-2 h-2 rounded-full bg-white/80" />
+            <div className="w-2 h-2 rounded-full bg-white/80" aria-hidden="true" />
             {categoryOption.label}
           </Badge>
         </div>
         <CardDescription className="flex items-center gap-1">
           Monthly Budget
-          {budget.trend === 'up' && <ArrowUp className="h-3 w-3 text-red-500" />}
-          {budget.trend === 'down' && <ArrowDown className="h-3 w-3 text-emerald-500" />}
-          {budget.trend === 'flat' && <TrendingUp className="h-3 w-3 text-muted-foreground" />}
+          {budget.trend === 'up' && <ArrowUp className="h-3 w-3 text-red-500" aria-hidden="true" />}
+          {budget.trend === 'down' && <ArrowDown className="h-3 w-3 text-emerald-500" aria-hidden="true" />}
+          {budget.trend === 'flat' && <TrendingUp className="h-3 w-3 text-muted-foreground" aria-hidden="true" />}
         </CardDescription>
       </CardHeader>
       <CardContent className="pb-2">
@@ -105,11 +107,23 @@ export const BudgetCard: React.FC<BudgetCardProps> = ({
       <CardFooter className="pt-2 flex justify-between">
         <Button variant="ghost" size="sm" className="text-xs">View Transactions</Button>
         <div className="flex gap-1">
-          <Button variant="ghost" size="icon" onClick={onEdit} className="h-8 w-8 text-muted-foreground hover:text-foreground">
-            <Pencil className="h-3.5 w-3.5" />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onEdit}
+            className="h-8 w-8 text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary"
+            aria-label="Edit budget"
+          >
+            <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
           </Button>
-          <Button variant="ghost" size="icon" onClick={onDelete} className="h-8 w-8 text-muted-foreground hover:text-destructive">
-            <Trash2 className="h-3.5 w-3.5" />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onDelete}
+            className="h-8 w-8 text-muted-foreground hover:text-destructive focus-visible:ring-2 focus-visible:ring-destructive"
+            aria-label="Delete budget"
+          >
+            <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
           </Button>
         </div>
       </CardFooter>

@@ -11,6 +11,7 @@ import { BudgetForm } from '@/components/budgets/BudgetForm';
 import { BudgetSummary } from '@/components/budgets/BudgetSummary';
 import { BudgetActions } from '@/components/budgets/BudgetActions';
 import { toast } from '@/components/ui/use-toast';
+import { useBudgetData } from '@/hooks/useBudgetData';
 
 const Budgets = () => {
   const { currentWorkspace, workspaceOptions } = useWorkspace();
@@ -24,83 +25,43 @@ const Budgets = () => {
     category: (currentWorkspace !== 'all' ? currentWorkspace : 'personal') as ExpenseCategory,
   });
   
-  // Dummy budgets - in a real app, these would be fetched from an API
-  const budgets = [
-    { 
-      id: 1, 
-      name: 'Groceries', 
-      amount: 500, 
-      spent: 325.42, 
-      category: 'personal',
-      trend: 'up' 
-    },
-    { 
-      id: 2, 
-      name: 'Entertainment', 
-      amount: 200, 
-      spent: 178.65, 
-      category: 'personal',
-      trend: 'down' 
-    },
-    { 
-      id: 3, 
-      name: 'Office Supplies', 
-      amount: 300, 
-      spent: 120.33, 
-      category: 'business',
-      trend: 'down' 
-    },
-    { 
-      id: 4, 
-      name: 'Marketing', 
-      amount: 1000, 
-      spent: 850.75, 
-      category: 'business',
-      trend: 'up' 
-    },
-    { 
-      id: 5, 
-      name: 'Travel', 
-      amount: 800, 
-      spent: 250.50, 
-      category: 'personal',
-      trend: 'down' 
-    },
-    { 
-      id: 6, 
-      name: 'Software Subscriptions', 
-      amount: 450, 
-      spent: 375.00, 
-      category: 'business',
-      trend: 'flat' 
-    },
-  ];
-  
+  // Use backend budgets from Supabase
+  const { budgets, isLoading, error, addBudget, updateBudget, deleteBudget } = useBudgetData();
+
   // Filter budgets based on selected workspace
-  const filteredBudgets = currentWorkspace === 'all' 
-    ? budgets 
+  const filteredBudgets = currentWorkspace === 'all'
+    ? budgets
     : budgets.filter(budget => budget.category === currentWorkspace);
-  
+
   // Calculate total budget and spent
-  const totalBudget = filteredBudgets.reduce((total, budget) => total + budget.amount, 0);
-  const totalSpent = filteredBudgets.reduce((total, budget) => total + budget.spent, 0);
+  const totalBudget = filteredBudgets.reduce((total, budget) => total + (budget.amount || 0), 0);
+  const totalSpent = filteredBudgets.reduce((total, budget) => total + (budget.spent || 0), 0);
   const percentSpent = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
   
-  const handleEditBudget = (budget: typeof budgets[0]) => {
+  const handleEditBudget = (budget: any) => {
     setEditBudgetId(budget.id);
     setFormData({
       name: budget.name,
-      amount: budget.amount.toString(),
+      amount: budget.amount?.toString() ?? '',
       category: budget.category as ExpenseCategory,
     });
     setAddBudgetOpen(true);
   };
-  
-  const handleDeleteBudget = (budgetId: number) => {
-    toast({
-      title: "Budget Deleted",
-      description: "The budget has been deleted successfully.",
-    });
+
+  const handleDeleteBudget = async (budgetId: string) => {
+    try {
+      await deleteBudget(budgetId);
+      toast({
+        title: "Budget Deleted",
+        description: "The budget has been deleted successfully.",
+      });
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || "Failed to delete budget.",
+        variant: "destructive",
+      });
+    }
   };
 
   // Find the category options based on workspaces (excluding 'all')
@@ -135,17 +96,56 @@ const Budgets = () => {
         />
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {filteredBudgets.map((budget, index) => (
-            <BudgetCard 
-              key={budget.id} 
-              budget={budget}
-              onEdit={() => handleEditBudget(budget)}
-              onDelete={() => handleDeleteBudget(budget.id)}
-              animationDelay={index * 0.05}
-              workspaceOptions={workspaceOptions}
-            />
-          ))}
-          
+          {isLoading ? (
+            <>
+              {/* Premium animated skeletons matching BudgetCard layout */}
+              {[1,2,3,4].map(i => (
+                <div key={i} className="col-span-2 md:col-span-1 animate-fade-in">
+                  <div className="flex flex-col gap-3 p-6 bg-gradient-to-r from-muted to-secondary/80 rounded-lg animate-pulse h-[200px]">
+                    <div className="h-5 w-1/3 rounded bg-muted-foreground/20 mb-2" />
+                    <div className="h-4 w-1/2 rounded bg-muted-foreground/10 mb-2" />
+                    <div className="flex-1" />
+                    <div className="flex gap-2">
+                      <div className="h-8 w-20 rounded bg-muted-foreground/10" />
+                      <div className="h-8 w-8 rounded-full bg-muted-foreground/20" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </>
+          ) : error ? (
+            <div className="col-span-2 flex flex-col items-center justify-center py-8 text-destructive animate-fade-in">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" className="mb-2 animate-bounce">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none" />
+                <path d="M12 8v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                <circle cx="12" cy="16" r="1" fill="currentColor" />
+              </svg>
+              <div>Failed to load budgets.</div>
+              <button className="mt-2 underline" onClick={() => window.location.reload()}>Retry</button>
+            </div>
+          ) : filteredBudgets.length === 0 ? (
+            <div className="col-span-2 flex flex-col items-center justify-center py-12 animate-fade-in">
+              <img src="/assets/budget-empty.svg" alt="No budgets" className="w-24 h-24 mb-4 opacity-80" aria-hidden="true" />
+              <div className="font-semibold text-lg mb-2">No budgets yet</div>
+              <div className="text-muted-foreground mb-4">Create your first budget to start tracking your spending!</div>
+              <Button onClick={() => setAddBudgetOpen(true)} autoFocus>
+                <Plus className="h-4 w-4" /> Add Budget
+              </Button>
+            </div>
+          ) : (
+            filteredBudgets.map((budget, index) => (
+              <div key={budget.id} className="animate-fade-in" style={{ animationDelay: `${index * 50}ms` }}>
+                <BudgetCard 
+                  budget={budget}
+                  onEdit={() => handleEditBudget(budget)}
+                  onDelete={() => handleDeleteBudget(budget.id)}
+                  animationDelay={index * 0.05}
+                  workspaceOptions={workspaceOptions}
+                />
+              </div>
+            ))
+          )}
+
           <Card className="border-dashed border-2 flex items-center justify-center h-[200px] card-hover animate-fade-in">
             <Button variant="ghost" className="gap-2" onClick={() => {
               setAddBudgetOpen(true);

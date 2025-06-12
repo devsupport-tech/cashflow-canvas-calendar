@@ -41,10 +41,13 @@ export const AddBusinessDialog = ({
 }: AddBusinessDialogProps) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent
+        aria-labelledby="add-business-dialog-title"
+        aria-describedby="add-business-dialog-description"
+      >
         <DialogHeader>
-          <DialogTitle>Add New Business</DialogTitle>
-          <DialogDescription>
+          <DialogTitle id="add-business-dialog-title">Add New Business</DialogTitle>
+          <DialogDescription id="add-business-dialog-description">
             Create a new business profile to track business finances separately.
           </DialogDescription>
         </DialogHeader>
@@ -64,12 +67,16 @@ export const AddBusinessDialog = ({
             <Label>Business Color</Label>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="w-full flex justify-between items-center">
+                <Button
+                  variant="outline"
+                  className="w-full flex justify-between items-center focus-visible:ring-2 focus-visible:ring-primary"
+                  aria-label="Select business color"
+                >
                   <div className="flex items-center">
-                    <div className={`w-4 h-4 rounded-full ${selectedColor} mr-2`} />
+                    <div className={`w-4 h-4 rounded-full ${selectedColor} mr-2`} aria-hidden="true" />
                     {BUSINESS_COLORS.find(c => c.value === selectedColor)?.name || 'Select a color'}
                   </div>
-                  <ChevronDown className="h-4 w-4" />
+                  <ChevronDown className="h-4 w-4" aria-hidden="true" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
@@ -79,7 +86,7 @@ export const AddBusinessDialog = ({
                     className="flex items-center gap-2 cursor-pointer"
                     onClick={() => onColorChange(color.value)}
                   >
-                    <div className={`w-4 h-4 rounded-full ${color.value}`} />
+                    <div className={`w-4 h-4 rounded-full ${color.value}`} aria-hidden="true" />
                     {color.name}
                   </DropdownMenuItem>
                 ))}

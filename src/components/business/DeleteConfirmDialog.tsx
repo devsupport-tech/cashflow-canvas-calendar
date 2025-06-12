@@ -23,19 +23,30 @@ export const DeleteConfirmDialog = ({
 }: DeleteConfirmDialogProps) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent
+        aria-labelledby="delete-confirm-dialog-title"
+        aria-describedby="delete-confirm-dialog-description"
+      >
         <DialogHeader>
-          <DialogTitle>Confirm Deletion</DialogTitle>
-          <DialogDescription>
+          <DialogTitle id="delete-confirm-dialog-title">Confirm Deletion</DialogTitle>
+          <DialogDescription id="delete-confirm-dialog-description">
             Are you sure you want to delete this business? This action cannot be undone.
             All associated budgets and transactions will be moved to the 'All' category.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            className="focus-visible:ring-2 focus-visible:ring-primary"
+          >
             Cancel
           </Button>
-          <Button variant="destructive" onClick={onConfirmDelete}>
+          <Button
+            variant="destructive"
+            onClick={onConfirmDelete}
+            className="focus-visible:ring-2 focus-visible:ring-destructive"
+          >
             Delete
           </Button>
         </DialogFooter>

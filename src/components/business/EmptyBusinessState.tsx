@@ -7,21 +7,16 @@ interface EmptyBusinessStateProps {
   onAddClick: () => void;
 }
 
-export const EmptyBusinessState = ({ onAddClick }: EmptyBusinessStateProps) => {
-  return (
-    <div className="bg-muted/50 rounded-lg p-6 text-center">
-      <Briefcase className="h-10 w-10 mx-auto text-muted-foreground" />
-      <h3 className="mt-2 font-medium">No businesses yet</h3>
-      <p className="text-sm text-muted-foreground mt-1">
-        Create your first business to organize your finances separately from personal expenses.
-      </p>
-      <Button 
-        onClick={onAddClick} 
-        variant="outline" 
-        className="mt-4"
-      >
-        <Plus className="h-4 w-4 mr-1" />
-        Add Business
+export const EmptyBusinessState = ({ onAddClick }: { onAddClick: () => void }) => (
+  <div className="flex flex-col items-center justify-center py-12 animate-fade-in">
+    <img src="/assets/business-empty.svg" alt="No businesses" className="w-24 h-24 mb-4 opacity-80" aria-hidden="true" />
+    <div className="font-semibold text-lg mb-2">No businesses yet</div>
+    <div className="text-muted-foreground mb-4">Add your first business to manage your workspaces and finances.</div>
+    <Button onClick={onAddClick} autoFocus>
+      <Plus className="h-4 w-4" /> Add Business
+    </Button>
+  </div>
+);
       </Button>
     </div>
   );

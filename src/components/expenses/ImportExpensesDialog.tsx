@@ -112,10 +112,14 @@ export const ImportExpensesDialog: React.FC<ImportExpensesDialogProps> = ({
       if (!newOpen) resetForm();
       onOpenChange(newOpen);
     }}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent
+        className="sm:max-w-md"
+        aria-labelledby="import-expenses-dialog-title"
+        aria-describedby="import-expenses-dialog-description"
+      >
         <DialogHeader>
-          <DialogTitle>Import Expenses</DialogTitle>
-          <DialogDescription>
+          <DialogTitle id="import-expenses-dialog-title">Import Expenses</DialogTitle>
+          <DialogDescription id="import-expenses-dialog-description">
             Upload a CSV file with your expense data.
           </DialogDescription>
         </DialogHeader>
@@ -129,9 +133,14 @@ export const ImportExpensesDialog: React.FC<ImportExpensesDialogProps> = ({
           )}
           
           <div className="flex items-center justify-center w-full">
-            <label htmlFor="dropzone-file" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-muted/50 hover:bg-muted">
+            <label
+              htmlFor="dropzone-file"
+              className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-muted/50 hover:bg-muted focus-within:ring-2 focus-within:ring-primary"
+              aria-label="Upload CSV file with expenses"
+              tabIndex={0}
+            >
               <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                <Upload className="w-8 h-8 mb-3 text-muted-foreground" />
+                <Upload className="w-8 h-8 mb-3 text-muted-foreground" aria-hidden="true" />
                 <p className="mb-2 text-sm text-muted-foreground">
                   <span className="font-semibold">Click to upload</span> or drag and drop
                 </p>
@@ -175,12 +184,14 @@ export const ImportExpensesDialog: React.FC<ImportExpensesDialogProps> = ({
               resetForm();
               onOpenChange(false);
             }}
+            className="focus-visible:ring-2 focus-visible:ring-primary"
           >
             Cancel
           </Button>
-          <Button 
-            onClick={handleImport} 
+          <Button
+            onClick={handleImport}
             disabled={!file || isLoading}
+            className="focus-visible:ring-2 focus-visible:ring-primary"
           >
             {isLoading ? 'Importing...' : 'Import'}
           </Button>

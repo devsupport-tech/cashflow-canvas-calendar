@@ -25,10 +25,78 @@ import { useWorkspace } from '@/contexts/WorkspaceContext';
 
 interface TransactionListProps {
   transactions: Transaction[];
+  onEdit?: (transaction: Transaction) => void;
+  onDelete?: (transactionId: string) => void;
 }
 
+interface TransactionItemProps {
+  transaction: Transaction;
+  onEdit?: (transaction: Transaction) => void;
+  onDelete?: (transactionId: string) => void;
+}
+
+const TransactionItem: React.FC<TransactionItemProps> = ({ transaction, onEdit, onDelete }) => {
+  const isIncome = transaction.type === 'income';
+  const formattedAmount = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD'
+  }).format(transaction.amount);
+
+  return (
+    <div className="flex items-center justify-between py-4 border-b border-border animate-in slide-up">
+      <div className="flex items-center gap-3">
+        <div className={cn(
+          "w-8 h-8 rounded-full flex items-center justify-center",
+          isIncome ? "bg-income/10" : "bg-destructive/10"
+        )}>
+          {isIncome 
+            ? <ArrowUpRight className="h-4 w-4 text-income" /> 
+            : <ArrowDownLeft className="h-4 w-4 text-destructive" />
+          }
+        </div>
+        <div>
+          <p className="font-medium">{transaction.description}</p>
+          <p className="text-xs text-muted-foreground">
+            {format(transaction.date, "MMM d, yyyy")}
+          </p>
+        </div>
+      </div>
+      <div className="flex items-center gap-2">
+        {transaction.category && (
+          <CategoryBadge category={transaction.category} />
+        )}
+        <p className={cn(
+          "font-medium",
+          isIncome ? "text-income" : "text-destructive"
+        )}>
+          {isIncome ? '+' : '-'}{formattedAmount}
+        </p>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-8 w-8">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Options</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => onEdit && onEdit(transaction)}>Edit</DropdownMenuItem>
+            <DropdownMenuItem>Duplicate</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="text-destructive" onClick={() => onDelete && onDelete(transaction.id)}>
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </div>
+  );
+};
+
 export const TransactionList: React.FC<TransactionListProps> = ({ 
-  transactions: allTransactions 
+  transactions: allTransactions, 
+  onEdit, 
+  onDelete 
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const { currentWorkspace } = useWorkspace();
@@ -92,10 +160,10 @@ export const TransactionList: React.FC<TransactionListProps> = ({
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Options</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Edit</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onEdit && onEdit(transaction)}>Edit</DropdownMenuItem>
               <DropdownMenuItem>Duplicate</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive">
+              <DropdownMenuItem className="text-destructive" onClick={() => onDelete && onDelete(transaction.id)}>
                 Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -135,6 +203,8 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                   <TransactionItem 
                     key={transaction.id} 
                     transaction={transaction} 
+                    onEdit={onEdit}
+                    onDelete={onDelete}
                   />
                 ))}
             </div>
@@ -154,6 +224,8 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                   <TransactionItem 
                     key={transaction.id} 
                     transaction={transaction} 
+                    onEdit={onEdit}
+                    onDelete={onDelete}
                   />
                 ))}
             </div>
@@ -173,6 +245,8 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                   <TransactionItem 
                     key={transaction.id} 
                     transaction={transaction} 
+                    onEdit={onEdit}
+                    onDelete={onDelete}
                   />
                 ))}
             </div>

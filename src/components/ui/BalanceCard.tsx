@@ -36,12 +36,17 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({
   }).format(amount);
 
   return (
-    <Card className={cn("overflow-hidden card-hover glass-card animate-scale-in", className)}>
+    <Card
+      className={cn("overflow-hidden card-hover glass-card animate-scale-in focus-visible:ring-2 focus-visible:ring-primary", className)}
+      role="region"
+      aria-labelledby={`balance-card-title-${title.replace(/\s+/g, '-').toLowerCase()}`}
+      tabIndex={0}
+    >
       <CardContent className="p-6">
         <div className="flex justify-between items-start">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <h3 className="text-sm font-medium text-muted-foreground">{title}</h3>
+              <h3 id={`balance-card-title-${title.replace(/\s+/g, '-').toLowerCase()}`} className="text-sm font-medium text-muted-foreground">{title}</h3>
               {workspace && (
                 <Badge 
                   variant="outline" 
@@ -69,12 +74,15 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({
               </p>
             )}
           </div>
-          <div className={cn(
-            "p-2 rounded-lg animate-float",
-            currentWorkspace === 'personal' 
-              ? "bg-gradient-to-br from-violet-500 to-purple-600" 
-              : "bg-gradient-to-br from-blue-500 to-cyan-600"
-          )}>
+          <div
+            className={cn(
+              "p-2 rounded-lg animate-float",
+              currentWorkspace === 'personal'
+                ? "bg-gradient-to-br from-violet-500 to-purple-600"
+                : "bg-gradient-to-br from-blue-500 to-cyan-600"
+            )}
+            aria-hidden="true"
+          >
             {icon}
           </div>
         </div>

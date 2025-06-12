@@ -65,10 +65,13 @@ export const BudgetForm: React.FC<BudgetFormProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent>
+      <DialogContent
+        aria-labelledby="budget-form-dialog-title"
+        aria-describedby="budget-form-dialog-description"
+      >
         <DialogHeader>
-          <DialogTitle>{editBudgetId ? "Edit Budget" : "Create New Budget"}</DialogTitle>
-          <DialogDescription>
+          <DialogTitle id="budget-form-dialog-title">{editBudgetId ? "Edit Budget" : "Create New Budget"}</DialogTitle>
+          <DialogDescription id="budget-form-dialog-description">
             {editBudgetId ? "Update your budget details below." : "Add a new budget to track your expenses."}
           </DialogDescription>
         </DialogHeader>
@@ -81,6 +84,9 @@ export const BudgetForm: React.FC<BudgetFormProps> = ({
               value={formData.name} 
               onChange={(e) => setFormData({...formData, name: e.target.value})}
               placeholder="e.g., Groceries, Rent, etc."
+              aria-required="true"
+              required
+              className="focus-visible:ring-2 focus-visible:ring-primary"
             />
           </div>
           
@@ -94,6 +100,9 @@ export const BudgetForm: React.FC<BudgetFormProps> = ({
               type="number"
               min="0"
               step="0.01"
+              aria-required="true"
+              required
+              className="focus-visible:ring-2 focus-visible:ring-primary"
             />
           </div>
           
@@ -102,15 +111,16 @@ export const BudgetForm: React.FC<BudgetFormProps> = ({
             <Select 
               value={formData.category} 
               onValueChange={(value) => setFormData({...formData, category: value as ExpenseCategory})}
+              required
             >
-              <SelectTrigger>
+              <SelectTrigger className="focus-visible:ring-2 focus-visible:ring-primary" aria-required="true">
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent>
                 {categoryOptions.map((option) => (
                   <SelectItem key={option.value.toString()} value={option.value.toString()}>
                     <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${option.color}`} />
+                      <div className={`w-2 h-2 rounded-full ${option.color}`} aria-hidden="true" />
                       {option.label}
                     </div>
                   </SelectItem>
@@ -120,18 +130,23 @@ export const BudgetForm: React.FC<BudgetFormProps> = ({
           </div>
           
           <DialogFooter>
-            <Button variant="outline" type="button" onClick={() => {
-              setOpen(false);
-              setFormData({ 
-                name: '', 
-                amount: '', 
-                category: formData.category 
-              });
-              setEditBudgetId(null);
-            }}>
+            <Button
+              variant="outline"
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                setFormData({ 
+                  name: '', 
+                  amount: '', 
+                  category: formData.category 
+                });
+                setEditBudgetId(null);
+              }}
+              className="focus-visible:ring-2 focus-visible:ring-primary"
+            >
               Cancel
             </Button>
-            <Button type="submit">
+            <Button type="submit" className="focus-visible:ring-2 focus-visible:ring-primary">
               {editBudgetId ? "Update Budget" : "Create Budget"}
             </Button>
           </DialogFooter>

@@ -8,27 +8,75 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { Dialog, DialogTrigger } from '@/components/ui/dialog';
+import { useAccountData } from '@/hooks/useAccountData';
+import AccountForm from '@/components/accounts/AccountForm';
 
 const Accounts = () => {
   const { currentWorkspace } = useWorkspace();
   const [addAccountOpen, setAddAccountOpen] = React.useState(false);
   
-  const accounts = [
-    { id: 1, name: 'Main Checking', type: 'checking', balance: 5463.23, category: 'personal' },
-    { id: 2, name: 'Savings', type: 'savings', balance: 12750.42, category: 'personal' },
-    { id: 3, name: 'Business Checking', type: 'checking', balance: 8425.19, category: 'business' },
-    { id: 4, name: 'Tax Savings', type: 'savings', balance: 4260.87, category: 'business' },
-    { id: 5, name: 'Credit Card', type: 'credit', balance: -1240.56, category: 'personal' },
-    { id: 6, name: 'Business Credit Card', type: 'credit', balance: -3560.42, category: 'business' },
-  ];
-  
+  // Use backend accounts from Supabase
+  const { accounts, isLoading, error, addAccount, updateAccount, deleteAccount } = useAccountData();
+  const [editAccountId, setEditAccountId] = React.useState<string | null>(null);
+  const [formData, setFormData] = React.useState({
+    name: '',
+    type: '',
+    balance: '',
+    category: currentWorkspace || '',
+  });
+  const [formLoading, setFormLoading] = React.useState(false);
+
   // Filter accounts based on selected workspace
   const filteredAccounts = accounts.filter(account => 
     account.category === currentWorkspace
   );
-  
+
   // Calculate total balances
-  const totalBalance = filteredAccounts.reduce((total, account) => total + account.balance, 0);
+  const totalBalance = filteredAccounts.reduce((total, account) => total + (account.balance || 0), 0);
+
+  // Handlers for add/edit/delete
+  const handleAddAccount = () => {
+    setEditAccountId(null);
+    setFormData({ name: '', type: '', balance: '', category: currentWorkspace || '' });
+    setAddAccountOpen(true);
+  };
+
+  const handleEditAccount = (account: any) => {
+    setEditAccountId(account.id);
+    setFormData({
+      name: account.name || '',
+      type: account.type || '',
+      balance: account.balance?.toString() || '',
+      category: account.category || '',
+    });
+    setAddAccountOpen(true);
+  };
+
+  const handleDeleteAccount = (account: any) => {
+    if (window.confirm(`Are you sure you want to delete account "${account.name}"? This action cannot be undone.`)) {
+      deleteAccount(account.id)
+        .then(() => {
+          window.alert('Account deleted successfully.');
+        })
+        .catch((err: any) => {
+          window.alert(err.message || 'Failed to delete account.');
+        });
+    }
+  };
+
+  const handleFormSubmit = async (data: any) => {
+    setFormLoading(true);
+    try {
+      if (editAccountId) {
+        await updateAccount({ ...data, id: editAccountId, balance: parseFloat(data.balance) });
+      } else {
+        await addAccount({ ...data, balance: parseFloat(data.balance) });
+      }
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
   
   return (
     <MainLayout>
@@ -42,26 +90,31 @@ const Accounts = () => {
           </div>
           
           <div className="flex flex-wrap items-center gap-2">
-            <Dialog open={addAccountOpen} onOpenChange={setAddAccountOpen}>
-              <DialogTrigger asChild>
-                <Button className="gap-1">
-                  <Plus className="h-4 w-4" />
-                  Add Account
-                </Button>
-              </DialogTrigger>
-              {/* Account form will go here in a future update */}
-            </Dialog>
-            
-            <Button variant="outline" className="gap-1">
+            <Button onClick={handleAddAccount} isLoading={formLoading} disabled={formLoading}>
+              <Plus className="h-4 w-4" />
+              Add Account
+            </Button>
+            <Button>
               <Upload className="h-4 w-4" />
               Import
             </Button>
-            
-            <Button variant="outline" className="gap-1">
+            <Button>
               <Download className="h-4 w-4" />
               Export
             </Button>
           </div>
+
+          {/* AccountForm Dialog */}
+          <AccountForm
+            open={addAccountOpen}
+            setOpen={setAddAccountOpen}
+            formData={formData}
+            setFormData={setFormData}
+            editAccountId={editAccountId}
+            setEditAccountId={setEditAccountId}
+            onSubmit={handleFormSubmit}
+            loading={formLoading}
+          />
         </div>
         
         <div className="mb-6">
@@ -95,9 +148,54 @@ const Accounts = () => {
           </TabsList>
           
           <TabsContent value="all" className="space-y-4 mt-4">
-            {filteredAccounts.map(account => (
-              <AccountCard key={account.id} account={account} />
-            ))}
+            {/* Loading, error, and empty states for accounts list */}
+            {isLoading ? (
+              <div className="flex flex-col gap-4 py-8">
+                {/* Premium animated skeletons matching AccountCard layout */}
+                {[1,2,3].map(i => (
+                  <div key={i} className="w-full animate-fade-in">
+                    <div className="flex items-center gap-4 p-6 bg-gradient-to-r from-muted to-secondary/80 rounded-lg animate-pulse">
+                      <div className="h-10 w-10 rounded-full bg-muted-foreground/20" />
+                      <div className="flex-1 space-y-2">
+                        <div className="h-4 w-1/3 rounded bg-muted-foreground/20" />
+                        <div className="h-3 w-1/4 rounded bg-muted-foreground/10" />
+                      </div>
+                      <div className="h-6 w-16 rounded bg-muted-foreground/20" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : error ? (
+              <div className="flex flex-col items-center justify-center py-8 text-destructive animate-fade-in">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" className="mb-2 animate-bounce">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none" />
+                  <path d="M12 8v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  <circle cx="12" cy="16" r="1" fill="currentColor" />
+                </svg>
+                <div>Failed to load accounts.</div>
+                <button className="mt-2 underline" onClick={() => window.location.reload()}>Retry</button>
+              </div>
+            ) : filteredAccounts.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 animate-fade-in">
+                <img src="/assets/piggy-bank.svg" alt="No accounts" className="w-24 h-24 mb-4 opacity-80" aria-hidden="true" />
+                <div className="font-semibold text-lg mb-2">No accounts yet</div>
+                <div className="text-muted-foreground mb-4">Start by adding your first account to manage your finances!</div>
+                <Button onClick={handleAddAccount} autoFocus>
+                  <Plus className="h-4 w-4" /> Add Account
+                </Button>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-4 animate-fade-in">
+                {filteredAccounts.map(account => (
+                  <AccountCard
+                    key={account.id}
+                    account={account}
+                    onEdit={() => handleEditAccount(account)}
+                    onDelete={() => handleDeleteAccount(account)}
+                  />
+                ))}
+              </div>
+            )}
           </TabsContent>
           
           <TabsContent value="checking" className="space-y-4 mt-4">
@@ -131,15 +229,17 @@ const Accounts = () => {
 
 interface AccountCardProps {
   account: {
-    id: number;
+    id: string | number;
     name: string;
     type: string;
     balance: number;
     category: string;
   };
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
-const AccountCard: React.FC<AccountCardProps> = ({ account }) => {
+const AccountCard: React.FC<AccountCardProps> = ({ account, onEdit, onDelete }) => {
   const accountTypeIcon = {
     checking: <CreditCard className="h-5 w-5 text-primary" />,
     savings: <CreditCard className="h-5 w-5 text-emerald-500" />,
@@ -157,16 +257,28 @@ const AccountCard: React.FC<AccountCardProps> = ({ account }) => {
               <p className="text-xs text-muted-foreground capitalize">{account.type}</p>
             </div>
           </div>
-          <div className="text-right">
+          <div className="text-right flex flex-col items-end gap-2">
             <p className={`font-semibold text-lg ${account.balance >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
               {account.balance >= 0 ? '$' : '-$'}{Math.abs(account.balance).toFixed(2)}
             </p>
-            <Badge variant="outline" className={`text-xs ${
-              account.category === 'business' ? 'bg-ocean-blue text-white' : 
-              'bg-bright-orange text-white'
-            }`}>
-              {account.category}
-            </Badge>
+            <div className="flex gap-1 items-center">
+              <Badge className={`text-xs ${
+                account.category === 'business' ? 'bg-ocean-blue text-white' : 
+                'bg-bright-orange text-white'
+              }`}>
+                {account.category}
+              </Badge>
+              {onEdit && (
+                <Button onClick={onEdit} title="Edit Account">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M16.862 3.487a2.1 2.1 0 0 1 2.97 2.97l-9.193 9.194a2 2 0 0 1-.707.464l-3.23 1.076a.5.5 0 0 1-.635-.634l1.077-3.23a2 2 0 0 1 .463-.707l9.194-9.193Z"/></svg>
+                </Button>
+              )}
+              {onDelete && (
+                <Button onClick={onDelete} title="Delete Account">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M3 6h18M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M10 11v6M14 11v6M5 6v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V6"/></svg>
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </CardContent>

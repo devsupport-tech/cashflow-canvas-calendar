@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { ExpenseCategory, ExpenseType, TransactionType } from '@/lib/types';
+import { useTransactionData } from '@/hooks/useTransactionData';
 
 interface UseExpenseFormProps {
   onClose: () => void;
@@ -36,9 +37,12 @@ export const useExpenseForm = ({ onClose, initialDate, initialExpense }: UseExpe
     }
   }, [initialExpense]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const { addTransaction, updateTransaction } = useTransactionData();
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Form validation
     if (!description || !amount || isNaN(parseFloat(amount))) {
       toast({
@@ -48,30 +52,34 @@ export const useExpenseForm = ({ onClose, initialDate, initialExpense }: UseExpe
       });
       return;
     }
-    
-    // Process submission
+
+    setLoading(true);
     const transactionData = {
-      id: initialExpense?.id,
+      id: initialExpense?.id?.toString(),
       description,
       amount: parseFloat(amount),
-      date,
+      date: date instanceof Date ? date.toISOString() : date,
       type: transactionType,
       category: category,
       expenseType: transactionType === 'expense' ? expenseType : undefined,
+      tags: [],
     };
-    
-    console.log('Transaction data:', transactionData);
-    
-    // Show success message
-    toast({
-      title: initialExpense 
-        ? `${transactionType === 'expense' ? 'Expense' : 'Income'} updated` 
-        : `${transactionType === 'expense' ? 'Expense' : 'Income'} added`,
-      description: `${description} ($${amount}) was ${initialExpense ? 'updated' : 'added'} successfully.`,
-    });
-    
-    // Close the form
-    onClose();
+    try {
+      if (initialExpense) {
+        await updateTransaction(transactionData);
+      } else {
+        await addTransaction(transactionData);
+      }
+      onClose();
+    } catch (error: any) {
+      toast({
+        title: "Failed to save transaction",
+        description: error?.message || 'Could not save transaction.',
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return {

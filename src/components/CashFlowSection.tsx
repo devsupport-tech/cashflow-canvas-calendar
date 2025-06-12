@@ -28,7 +28,16 @@ export const CashFlowSection: React.FC<CashFlowSectionProps> = ({
         </Badge>
       </CardHeader>
       <CardContent>
-        <CashFlowChart data={monthlySummary} timeFrame={timeFrame} />
+        {(!monthlySummary || monthlySummary.length === 0 || monthlySummary.every(m => m.income === 0 && m.expenses.personal === 0 && m.expenses.business === 0)) ? (
+          <div className="flex flex-col items-center justify-center py-8 animate-fade-in">
+            <img src="/assets/dashboard-empty.svg" alt="No cash flow" className="w-20 h-20 mb-3 opacity-80" aria-hidden="true" />
+            <div className="font-semibold text-base mb-1">No cash flow data</div>
+            <div className="text-muted-foreground mb-2">Add transactions to see your cash flow over time.</div>
+            <a href="/transactions" tabIndex={0} className="underline text-primary">Go to Transactions</a>
+          </div>
+        ) : (
+          <CashFlowChart data={monthlySummary} timeFrame={timeFrame} />
+        )}
       </CardContent>
     </Card>
   );
