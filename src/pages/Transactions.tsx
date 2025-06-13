@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { MainLayout } from '@/layouts/MainLayout';
 import { TransactionList } from '@/components/TransactionList';
@@ -17,6 +16,7 @@ import { WorkspaceSwitcher } from '@/components/WorkspaceSwitcher';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { exportTransactionsToCSV } from '@/utils/exportImport';
 import { toast } from '@/components/ui/use-toast';
+import { Transaction } from '@/lib/types';
 
 const Transactions = () => {
   const [formOpen, setFormOpen] = React.useState(false);
@@ -33,8 +33,15 @@ const Transactions = () => {
   // Use live transactions from backend
   const { transactions, isLoading, error, addTransaction, updateTransaction, deleteTransaction } = useTransactionData();
 
+  // Convert TransactionItem[] to Transaction[] for consistent typing
+  const convertedTransactions: Transaction[] = transactions.map(tx => ({
+    ...tx,
+    date: tx.date, // Keep as string since Transaction interface expects string
+    type: tx.type as 'income' | 'expense'
+  }));
+
   // Apply date range and type filter client-side
-  const filteredTransactions = transactions.filter(t => {
+  const filteredTransactions = convertedTransactions.filter(t => {
     // Filter by date range
     if (dateRange?.from && dateRange?.to) {
       const txDate = new Date(t.date);
@@ -49,12 +56,12 @@ const Transactions = () => {
     setIsExporting(true);
     
     try {
-      // Convert TransactionItem[] to Transaction[] for export
-      const convertedTransactions = filteredTransactions.map(tx => ({
+      // Convert string dates to Date objects for export
+      const exportTransactions = filteredTransactions.map(tx => ({
         ...tx,
         date: new Date(tx.date)
       }));
-      exportTransactionsToCSV(convertedTransactions);
+      exportTransactionsToCSV(exportTransactions);
       toast({
         title: "Export Completed",
         description: "Your transactions have been exported successfully.",

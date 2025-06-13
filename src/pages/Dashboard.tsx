@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { AccountsSummary } from '@/components/AccountsSummary';
 import { useTransactionData } from '@/hooks/useTransactionData';
-import { MonthlyTotal } from '@/lib/types';
+import { MonthlyTotal, Transaction } from '@/lib/types';
 import { startOfMonth, endOfMonth } from 'date-fns';
 import { DashboardHeader } from '@/components/DashboardHeader';
 import { CashFlowSection } from '@/components/CashFlowSection';
@@ -14,17 +14,23 @@ const Dashboard = () => {
   const [businessView, setBusinessView] = useState('all');
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   
-    // Use live transactions from backend
+  // Use live transactions from backend
   const { transactions, isLoading, error } = useTransactionData();
 
+  // Convert TransactionItem[] to Transaction[] for consistent typing
+  const convertedTransactions: Transaction[] = transactions.map(tx => ({
+    ...tx,
+    type: tx.type as 'income' | 'expense'
+  }));
+
   // Filter transactions based on business view
-  const filteredTransactions = transactions.filter(transaction => {
+  const filteredTransactions = convertedTransactions.filter(transaction => {
     if (businessView === 'all') return true;
     return transaction.category === businessView;
   });
 
   // Compute monthlySummary for CashFlowSection
-  const computeMonthlySummary = (txs: typeof transactions): MonthlyTotal[] => {
+  const computeMonthlySummary = (txs: Transaction[]): MonthlyTotal[] => {
     // Group by month (last 12 months)
     const now = new Date();
     const summary: MonthlyTotal[] = [];
@@ -48,17 +54,17 @@ const Dashboard = () => {
     }
     return summary;
   };
-  const monthlySummary = computeMonthlySummary(transactions);
+  const monthlySummary = computeMonthlySummary(convertedTransactions);
 
   // Compute live finance summary for DashboardTabs
-  const totalIncome = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
-  const personalExpenses = transactions.filter(t => t.type === 'expense' && t.category === 'personal').reduce((sum, t) => sum + t.amount, 0);
-  const businessExpenses = transactions.filter(t => t.type === 'expense' && t.category === 'business').reduce((sum, t) => sum + t.amount, 0);
+  const totalIncome = convertedTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+  const personalExpenses = convertedTransactions.filter(t => t.type === 'expense' && t.category === 'personal').reduce((sum, t) => sum + t.amount, 0);
+  const businessExpenses = convertedTransactions.filter(t => t.type === 'expense' && t.category === 'business').reduce((sum, t) => sum + t.amount, 0);
   const totalExpenses = personalExpenses + businessExpenses;
   const netAmount = totalIncome - totalExpenses;
 
   // Category totals (personal and business)
-  const getCategoryTotals = (txs: typeof transactions, categoryType: 'personal' | 'business') => {
+  const getCategoryTotals = (txs: Transaction[], categoryType: 'personal' | 'business') => {
     const expenseTxs = txs.filter(t => t.type === 'expense' && t.category === categoryType);
     const total = expenseTxs.reduce((sum, t) => sum + t.amount, 0);
     const grouped: Record<string, number> = {};
@@ -73,8 +79,8 @@ const Dashboard = () => {
     }));
   };
   const categoryTotals = {
-    personal: getCategoryTotals(transactions, 'personal'),
-    business: getCategoryTotals(transactions, 'business'),
+    personal: getCategoryTotals(convertedTransactions, 'personal'),
+    business: getCategoryTotals(convertedTransactions, 'business'),
   };
 
   const financeSummary = {

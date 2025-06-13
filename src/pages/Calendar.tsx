@@ -19,6 +19,7 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
+import { Transaction } from '@/lib/types';
 
 const Calendar = () => {
   const { currentWorkspace, getWorkspaceFilterType } = useWorkspace();
@@ -33,13 +34,19 @@ const Calendar = () => {
 
   const { transactions, isLoading, error, addTransaction, updateTransaction, deleteTransaction } = useTransactionData();
 
+  // Convert TransactionItem[] to Transaction[] with proper typing
+  const convertedTransactions: Transaction[] = transactions.map(tx => ({
+    ...tx,
+    type: tx.type as 'income' | 'expense'
+  }));
+
   // Parse transaction dates for calendar highlights (assume transaction.date is ISO string)
-  const transactionDates = (transactions || [])
+  const transactionDates = convertedTransactions
     .map(t => (typeof t.date === 'string' ? t.date.split('T')[0] : new Date(t.date).toISOString().split('T')[0]))
     .filter((date, index, self) => self.indexOf(date) === index)
     .map(dateStr => new Date(dateStr));
 
-  const filteredTransactions = (transactions || []).filter(transaction => {
+  const filteredTransactions = convertedTransactions.filter(transaction => {
     const txDate = new Date(transaction.date);
     if (!dateRange || !dateRange.from) return true;
     if (dateRange.to) {
@@ -51,10 +58,10 @@ const Calendar = () => {
   // Use the helper function from context to determine workspace filter type
   const workspaceFilterType = getWorkspaceFilterType();
 
-  // Convert TransactionItem[] to Transaction[] for ExpenseCalendar
-  const convertedTransactions = filteredTransactions.map(tx => ({
+  // Convert to proper Transaction format for ExpenseCalendar
+  const calendarTransactions: Transaction[] = filteredTransactions.map(tx => ({
     ...tx,
-    date: new Date(tx.date) // Convert string date to Date object
+    date: typeof tx.date === 'string' ? tx.date : tx.date.toISOString()
   }));
 
   return (
@@ -155,7 +162,7 @@ const Calendar = () => {
           </div>
         ) : viewType === 'calendar' ? (
           <ExpenseCalendar 
-            transactions={convertedTransactions} 
+            transactions={calendarTransactions} 
             selectedDate={selectedDate}
             setSelectedDate={setSelectedDate}
             viewType="month"

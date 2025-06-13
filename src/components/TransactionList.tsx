@@ -42,6 +42,9 @@ const TransactionItem: React.FC<TransactionItemProps> = ({ transaction, onEdit, 
     currency: 'USD'
   }).format(transaction.amount);
 
+  // Parse date from string if needed
+  const transactionDate = typeof transaction.date === 'string' ? new Date(transaction.date) : transaction.date;
+
   return (
     <div className="flex items-center justify-between py-4 border-b border-border animate-in slide-up">
       <div className="flex items-center gap-3">
@@ -57,7 +60,7 @@ const TransactionItem: React.FC<TransactionItemProps> = ({ transaction, onEdit, 
         <div>
           <p className="font-medium">{transaction.description}</p>
           <p className="text-xs text-muted-foreground">
-            {format(transaction.date, "MMM d, yyyy")}
+            {format(transactionDate, "MMM d, yyyy")}
           </p>
         </div>
       </div>
@@ -140,7 +143,11 @@ export const TransactionList: React.FC<TransactionListProps> = ({
           {filteredTransactions.length > 0 ? (
             <div>
               {filteredTransactions
-                .sort((a, b) => b.date.getTime() - a.date.getTime())
+                .sort((a, b) => {
+                  const dateA = typeof a.date === 'string' ? new Date(a.date) : a.date;
+                  const dateB = typeof b.date === 'string' ? new Date(b.date) : b.date;
+                  return dateB.getTime() - dateA.getTime();
+                })
                 .map((transaction) => (
                   <TransactionItem 
                     key={transaction.id} 
@@ -161,7 +168,11 @@ export const TransactionList: React.FC<TransactionListProps> = ({
           {expenses.length > 0 ? (
             <div>
               {expenses
-                .sort((a, b) => b.date.getTime() - a.date.getTime())
+                .sort((a, b) => {
+                  const dateA = typeof a.date === 'string' ? new Date(a.date) : a.date;
+                  const dateB = typeof b.date === 'string' ? new Date(b.date) : b.date;
+                  return dateB.getTime() - dateA.getTime();
+                })
                 .map((transaction) => (
                   <TransactionItem 
                     key={transaction.id} 
@@ -182,7 +193,11 @@ export const TransactionList: React.FC<TransactionListProps> = ({
           {income.length > 0 ? (
             <div>
               {income
-                .sort((a, b) => b.date.getTime() - a.date.getTime())
+                .sort((a, b) => {
+                  const dateA = typeof a.date === 'string' ? new Date(a.date) : a.date;
+                  const dateB = typeof b.date === 'string' ? new Date(b.date) : b.date;
+                  return dateB.getTime() - dateA.getTime();
+                })
                 .map((transaction) => (
                   <TransactionItem 
                     key={transaction.id} 

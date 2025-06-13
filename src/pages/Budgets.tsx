@@ -18,7 +18,7 @@ const Budgets = () => {
   const [addBudgetOpen, setAddBudgetOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
-  const [editBudgetId, setEditBudgetId] = useState<number | null>(null);
+  const [editBudgetId, setEditBudgetId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     amount: '',
@@ -136,7 +136,10 @@ const Budgets = () => {
             filteredBudgets.map((budget, index) => (
               <div key={budget.id} className="animate-fade-in" style={{ animationDelay: `${index * 50}ms` }}>
                 <BudgetCard 
-                  budget={budget}
+                  budget={{
+                    ...budget,
+                    id: parseInt(budget.id) // Convert string id to number for BudgetCard
+                  }}
                   onEdit={() => handleEditBudget(budget)}
                   onDelete={() => handleDeleteBudget(budget.id)}
                   animationDelay={index * 0.05}
