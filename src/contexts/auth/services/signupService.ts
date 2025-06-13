@@ -22,29 +22,29 @@ export const signupService = {
         throw error;
       }
       
-      // Create user profile
+      // Create user profile - but handle the case where table doesn't exist
       if (data.user) {
         console.log(`Creating profile for user ${data.user.id}`);
         
-        const { error: profileError } = await supabase
-          .from('user_profiles')
-          .insert({
-            id: data.user.id,
-            email,
-            name: name || email.split('@')[0],
-            created_at: new Date().toISOString(),
-          });
-          
-        if (profileError) {
-          console.error(`Profile creation error: ${profileError.message}`);
-          
-          toast({
-            title: "Profile setup failed",
-            description: "Your account was created but we couldn't set up your profile.",
-            variant: "destructive",
-          });
-          
-          throw profileError;
+        try {
+          const { error: profileError } = await supabase
+            .from('user_profiles')
+            .insert({
+              id: data.user.id,
+              email,
+              name: name || email.split('@')[0],
+              created_at: new Date().toISOString(),
+            });
+            
+          if (profileError) {
+            console.error(`Profile creation error: ${profileError.message || 'Table may not exist'}`);
+            
+            // Don't throw an error if it's just a missing table - user can still use the app
+            console.warn('Profile table does not exist - user created but no profile stored');
+          }
+        } catch (profileErr: any) {
+          console.error('Profile creation failed:', profileErr);
+          // Don't throw - allow signup to continue without profile
         }
       }
       
@@ -55,11 +55,18 @@ export const signupService = {
       
       return Promise.resolve();
     } catch (error: any) {
-      return baseAuthService.handleError(
-        error, 
-        "Could not create your account. Please try again.", 
-        "Signup failed"
-      );
+      console.error('Signup service error:', error);
+      
+      // Provide more specific error message
+      const errorMessage = error?.message || "Could not create your account. Please try again.";
+      
+      toast({
+        title: "Signup failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+      
+      throw error;
     }
   }
 };

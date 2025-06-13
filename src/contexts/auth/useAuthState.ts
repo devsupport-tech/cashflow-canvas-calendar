@@ -26,12 +26,19 @@ export function useAuthState() {
         
         if (authUser) {
           console.log("Auth user found:", authUser.id);
-          // Get user profile data
-          const { data: profile } = await supabase
-            .from('user_profiles')
-            .select('*')
-            .eq('id', authUser.id)
-            .single();
+          
+          // Try to get user profile data, but don't fail if table doesn't exist
+          let profile = null;
+          try {
+            const { data: profileData } = await supabase
+              .from('user_profiles')
+              .select('*')
+              .eq('id', authUser.id)
+              .single();
+            profile = profileData;
+          } catch (profileError) {
+            console.warn('Profile table does not exist or profile not found, using auth data only');
+          }
             
           const userData = {
             id: authUser.id,
@@ -75,12 +82,18 @@ export function useAuthState() {
           
           console.log("User signed in:", authUser.id);
           
-          // Get user profile data
-          const { data: profile } = await supabase
-            .from('user_profiles')
-            .select('*')
-            .eq('id', authUser.id)
-            .single();
+          // Try to get user profile data, but don't fail if table doesn't exist
+          let profile = null;
+          try {
+            const { data: profileData } = await supabase
+              .from('user_profiles')
+              .select('*')
+              .eq('id', authUser.id)
+              .single();
+            profile = profileData;
+          } catch (profileError) {
+            console.warn('Profile table does not exist or profile not found, using auth data only');
+          }
             
           setUser({
             id: authUser.id,
