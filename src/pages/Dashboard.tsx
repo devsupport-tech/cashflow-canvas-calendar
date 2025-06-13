@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { AccountsSummary } from '@/components/AccountsSummary';
 import { useTransactionData } from '@/hooks/useTransactionData';
-import { MonthlyTotal, Transaction } from '@/lib/types';
+import { MonthlyTotal, Transaction, ExpenseType } from '@/lib/types';
 import { startOfMonth, endOfMonth } from 'date-fns';
 import { DashboardHeader } from '@/components/DashboardHeader';
 import { CashFlowSection } from '@/components/CashFlowSection';
@@ -20,7 +20,8 @@ const Dashboard = () => {
   // Convert TransactionItem[] to Transaction[] for consistent typing
   const convertedTransactions: Transaction[] = transactions.map(tx => ({
     ...tx,
-    type: tx.type as 'income' | 'expense'
+    type: tx.type as 'income' | 'expense',
+    expenseType: tx.expenseType as ExpenseType | undefined
   }));
 
   // Filter transactions based on business view

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { MainLayout } from '@/layouts/MainLayout';
 import { ExpenseCalendar } from '@/components/ExpenseCalendar';
@@ -19,7 +18,7 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
-import { Transaction } from '@/lib/types';
+import { Transaction, ExpenseType } from '@/lib/types';
 
 const Calendar = () => {
   const { currentWorkspace, getWorkspaceFilterType } = useWorkspace();
@@ -37,12 +36,13 @@ const Calendar = () => {
   // Convert TransactionItem[] to Transaction[] with proper typing
   const convertedTransactions: Transaction[] = transactions.map(tx => ({
     ...tx,
-    type: tx.type as 'income' | 'expense'
+    type: tx.type as 'income' | 'expense',
+    expenseType: tx.expenseType as ExpenseType | undefined
   }));
 
   // Parse transaction dates for calendar highlights (assume transaction.date is ISO string)
   const transactionDates = convertedTransactions
-    .map(t => (typeof t.date === 'string' ? t.date.split('T')[0] : new Date(t.date).toISOString().split('T')[0]))
+    .map(t => t.date.split('T')[0])
     .filter((date, index, self) => self.indexOf(date) === index)
     .map(dateStr => new Date(dateStr));
 
@@ -58,11 +58,8 @@ const Calendar = () => {
   // Use the helper function from context to determine workspace filter type
   const workspaceFilterType = getWorkspaceFilterType();
 
-  // Convert to proper Transaction format for ExpenseCalendar
-  const calendarTransactions: Transaction[] = filteredTransactions.map(tx => ({
-    ...tx,
-    date: typeof tx.date === 'string' ? tx.date : tx.date.toISOString()
-  }));
+  // Convert to proper Transaction format for ExpenseCalendar (already converted above)
+  const calendarTransactions: Transaction[] = filteredTransactions;
 
   return (
     <MainLayout>

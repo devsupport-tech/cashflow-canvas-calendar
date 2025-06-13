@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { MainLayout } from '@/layouts/MainLayout';
 import { TransactionList } from '@/components/TransactionList';
@@ -16,7 +17,7 @@ import { WorkspaceSwitcher } from '@/components/WorkspaceSwitcher';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { exportTransactionsToCSV } from '@/utils/exportImport';
 import { toast } from '@/components/ui/use-toast';
-import { Transaction } from '@/lib/types';
+import { Transaction, ExpenseType } from '@/lib/types';
 
 const Transactions = () => {
   const [formOpen, setFormOpen] = React.useState(false);
@@ -36,8 +37,8 @@ const Transactions = () => {
   // Convert TransactionItem[] to Transaction[] for consistent typing
   const convertedTransactions: Transaction[] = transactions.map(tx => ({
     ...tx,
-    date: tx.date, // Keep as string since Transaction interface expects string
-    type: tx.type as 'income' | 'expense'
+    type: tx.type as 'income' | 'expense',
+    expenseType: tx.expenseType as ExpenseType | undefined
   }));
 
   // Apply date range and type filter client-side
@@ -195,20 +196,20 @@ const Transactions = () => {
             ) : (
               <div className="flex flex-col gap-2">
                 {filteredTransactions.map((tx, idx) => {
-                  // Convert TransactionItem to Transaction for TransactionList
-                  const convertedTx = {
+                  // Convert Transaction to format expected by TransactionList
+                  const listTransactions: Transaction[] = [{
                     ...tx,
-                    date: new Date(tx.date)
-                  };
+                    date: tx.date // Keep as string since Transaction interface expects string
+                  }];
                   return (
                     <div key={tx.id} className="animate-fade-in" style={{ animationDelay: `${idx * 40}ms` }}>
                       <TransactionList 
-                        transactions={[convertedTx]} 
+                        transactions={listTransactions} 
                         onEdit={(transaction) => {
-                          // Convert back to TransactionItem for editing
+                          // Convert Transaction to TransactionItem for editing
                           const editTx = {
                             ...transaction,
-                            date: transaction.date.toISOString()
+                            date: transaction.date // Already a string
                           };
                           setFormOpen(true);
                           setEditingTransaction(editTx);

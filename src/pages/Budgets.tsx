@@ -138,7 +138,7 @@ const Budgets = () => {
                 <BudgetCard 
                   budget={{
                     ...budget,
-                    id: parseInt(budget.id) // Convert string id to number for BudgetCard
+                    id: parseInt(budget.id, 10) // Convert string id to number for BudgetCard
                   }}
                   onEdit={() => handleEditBudget(budget)}
                   onDelete={() => handleDeleteBudget(budget.id)}
