@@ -115,64 +115,6 @@ export const TransactionList: React.FC<TransactionListProps> = ({
   const expenses = filteredTransactions.filter(t => t.type === 'expense');
   const income = filteredTransactions.filter(t => t.type === 'income');
   
-  const TransactionItem: React.FC<{ transaction: Transaction }> = ({ transaction }) => {
-    const isIncome = transaction.type === 'income';
-    const formattedAmount = new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(transaction.amount);
-    
-    return (
-      <div className="flex items-center justify-between py-4 border-b border-border animate-in slide-up">
-        <div className="flex items-center gap-3">
-          <div className={cn(
-            "w-8 h-8 rounded-full flex items-center justify-center",
-            isIncome ? "bg-income/10" : "bg-destructive/10"
-          )}>
-            {isIncome 
-              ? <ArrowUpRight className="h-4 w-4 text-income" /> 
-              : <ArrowDownLeft className="h-4 w-4 text-destructive" />
-            }
-          </div>
-          <div>
-            <p className="font-medium">{transaction.description}</p>
-            <p className="text-xs text-muted-foreground">
-              {format(transaction.date, "MMM d, yyyy")}
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          {transaction.category && (
-            <CategoryBadge category={transaction.category} />
-          )}
-          <p className={cn(
-            "font-medium",
-            isIncome ? "text-income" : "text-destructive"
-          )}>
-            {isIncome ? '+' : '-'}{formattedAmount}
-          </p>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Options</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => onEdit && onEdit(transaction)}>Edit</DropdownMenuItem>
-              <DropdownMenuItem>Duplicate</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive" onClick={() => onDelete && onDelete(transaction.id)}>
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </div>
-    );
-  };
-  
   return (
     <div>
       <div className="mb-4">

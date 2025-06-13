@@ -1,3 +1,4 @@
+
 export type ExpenseCategory = 'personal' | 'business' | string;
 
 export type ExpenseType = 
@@ -78,4 +79,24 @@ export interface WorkspaceOption {
   value: string;
   label: string;
   color: string;
+}
+
+// Add missing Account type
+export interface Account {
+  id: string;
+  name: string;
+  type: 'checking' | 'savings' | 'credit' | 'investment';
+  balance: number;
+  category: string;
+  created_at?: string;
+}
+
+// Add missing Budget type
+export interface Budget {
+  id: string;
+  name: string;
+  amount: number;
+  spent: number;
+  category: string;
+  created_at?: string;
 }

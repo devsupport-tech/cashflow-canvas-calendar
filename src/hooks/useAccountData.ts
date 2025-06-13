@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Account } from '@/lib/types';
 import { supabase } from '@/lib/supabase';
@@ -69,26 +70,7 @@ export function useAccountData() {
     onSuccess: (id: string) => {
       toast({
         title: 'Account deleted',
-        description: 'Account has been deleted. ',
-        action: {
-          label: 'Undo',
-          onClick: async () => {
-            if (lastDeletedAccount) {
-              await addAccount.mutateAsync({
-                name: lastDeletedAccount.name,
-                type: lastDeletedAccount.type,
-                balance: lastDeletedAccount.balance,
-                category: lastDeletedAccount.category
-              });
-              toast({
-                title: 'Undo Successful',
-                description: 'Account restored.'
-              });
-              lastDeletedAccount = null;
-              if (undoDeleteTimeout) clearTimeout(undoDeleteTimeout);
-            }
-          }
-        },
+        description: 'Account has been deleted.',
         duration: 5000
       });
       // Actually delete from backend after timeout if not undone

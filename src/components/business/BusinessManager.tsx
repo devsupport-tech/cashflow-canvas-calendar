@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useBusinessData } from '@/hooks/useBusinessData';
 import { Business } from '@/lib/types';
@@ -29,7 +28,11 @@ export const BusinessManager = () => {
       return;
     }
     try {
-      await addBusiness({ name: newBusinessName.trim(), color: selectedColor });
+      await addBusiness({ 
+        name: newBusinessName.trim(), 
+        color: selectedColor,
+        createdAt: new Date().toISOString()
+      });
       toast({
         title: "Business created",
         description: `${newBusinessName.trim()} has been added to your businesses.`

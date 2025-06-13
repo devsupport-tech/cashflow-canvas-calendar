@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
@@ -80,7 +81,7 @@ export const useTransactionData = () => {
       return data[0];
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['transactions', user?.id, currentWorkspace]);
+      queryClient.invalidateQueries({ queryKey: ['transactions', user?.id, currentWorkspace] });
       toast({ title: 'Transaction added', description: 'Your transaction was added successfully.' });
     },
     onError: (error: any) => {
@@ -113,7 +114,7 @@ export const useTransactionData = () => {
       return tx;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['transactions', user?.id, currentWorkspace]);
+      queryClient.invalidateQueries({ queryKey: ['transactions', user?.id, currentWorkspace] });
       toast({ title: 'Transaction updated', description: 'Your transaction was updated.' });
     },
     onError: (error: any) => {
@@ -138,7 +139,7 @@ export const useTransactionData = () => {
       return id;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['transactions', user?.id, currentWorkspace]);
+      queryClient.invalidateQueries({ queryKey: ['transactions', user?.id, currentWorkspace] });
       toast({ title: 'Transaction deleted', description: 'Your transaction was deleted.' });
     },
     onError: (error: any) => {
