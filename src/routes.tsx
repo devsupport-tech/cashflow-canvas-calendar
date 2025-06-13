@@ -12,6 +12,7 @@ import NotFound from "./pages/NotFound";
 import Accounts from "./pages/Accounts";
 import Budgets from "./pages/Budgets";
 import Expenses from "./pages/Expenses";
+import LayoutMockups from "./pages/LayoutMockups";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { ProtectedRoutes, PublicOnlyRoute } from "./routes/ProtectedRoutes";
 
@@ -31,6 +32,9 @@ const AppRoutes = () => {
               </PublicOnlyRoute>
             } 
           />
+          
+          {/* Layout mockups route - can be accessed without auth for demo purposes */}
+          <Route path="/mockups" element={<LayoutMockups />} />
           
           {/* Protected routes - require authentication */}
           <Route element={<ProtectedRoutes />}>
