@@ -4,7 +4,7 @@ import { MainLayout } from '@/layouts/MainLayout';
 import { AnalyticsDashboard } from '@/components/AnalyticsDashboard';
 import { useTransactionData } from '@/hooks/useTransactionData';
 import { useMemo } from 'react';
-import { startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
+import { startOfMonth, endOfMonth } from 'date-fns';
 import { FinanceSummary, MonthlyTotal, CategoryTotal } from '@/lib/types';
 
 const Analytics = () => {
@@ -33,7 +33,10 @@ const Analytics = () => {
     const monthlySummary: MonthlyTotal[] = months.map(month => {
       const monthStart = startOfMonth(month);
       const monthEnd = endOfMonth(month);
-      const monthTx = transactions.filter(t => isWithinInterval(new Date(t.date), { start: monthStart, end: monthEnd }));
+      const monthTx = transactions.filter(t => {
+        const txDate = new Date(t.date);
+        return txDate >= monthStart && txDate <= monthEnd;
+      });
       const income = monthTx.filter(t => t.type === 'income').reduce((sum, t) => sum + Number(t.amount), 0);
       const expensesPersonal = monthTx.filter(t => t.type === 'expense' && t.category === 'personal').reduce((sum, t) => sum + Number(t.amount), 0);
       const expensesBusiness = monthTx.filter(t => t.type === 'expense' && t.category === 'business').reduce((sum, t) => sum + Number(t.amount), 0);

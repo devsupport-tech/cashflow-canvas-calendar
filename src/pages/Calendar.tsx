@@ -31,7 +31,7 @@ const Calendar = () => {
   const [timeRange, setTimeRange] = useState<'day' | 'week' | 'month' | 'quarter' | 'year'>('month');
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
-    const { transactions, isLoading, error, addTransaction, updateTransaction, deleteTransaction } = useTransactionData();
+  const { transactions, isLoading, error, addTransaction, updateTransaction, deleteTransaction } = useTransactionData();
 
   // Parse transaction dates for calendar highlights (assume transaction.date is ISO string)
   const transactionDates = (transactions || [])
@@ -50,6 +50,12 @@ const Calendar = () => {
 
   // Use the helper function from context to determine workspace filter type
   const workspaceFilterType = getWorkspaceFilterType();
+
+  // Convert TransactionItem[] to Transaction[] for ExpenseCalendar
+  const convertedTransactions = filteredTransactions.map(tx => ({
+    ...tx,
+    date: new Date(tx.date) // Convert string date to Date object
+  }));
 
   return (
     <MainLayout>
@@ -149,7 +155,7 @@ const Calendar = () => {
           </div>
         ) : viewType === 'calendar' ? (
           <ExpenseCalendar 
-            transactions={filteredTransactions} 
+            transactions={convertedTransactions} 
             selectedDate={selectedDate}
             setSelectedDate={setSelectedDate}
             viewType="month"

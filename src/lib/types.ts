@@ -22,7 +22,7 @@ export interface Transaction {
   id: string;
   amount: number;
   description: string;
-  date: Date;
+  date: string; // Changed from Date to string to match TransactionItem
   type: TransactionType;
   category?: ExpenseCategory;
   expenseType?: ExpenseType;
@@ -81,22 +81,24 @@ export interface WorkspaceOption {
   color: string;
 }
 
-// Add missing Account type
+// Updated Account type to include title property
 export interface Account {
   id: string;
   name: string;
+  title?: string; // Added optional title property
   type: 'checking' | 'savings' | 'credit' | 'investment';
   balance: number;
   category: string;
   created_at?: string;
 }
 
-// Add missing Budget type
+// Updated Budget type to include trend property
 export interface Budget {
   id: string;
   name: string;
   amount: number;
   spent: number;
   category: string;
+  trend: string; // Added trend property
   created_at?: string;
 }

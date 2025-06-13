@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { AccountsSummary } from '@/components/AccountsSummary';
 import { useTransactionData } from '@/hooks/useTransactionData';
 import { MonthlyTotal } from '@/lib/types';
-import { startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
+import { startOfMonth, endOfMonth } from 'date-fns';
 import { DashboardHeader } from '@/components/DashboardHeader';
 import { CashFlowSection } from '@/components/CashFlowSection';
 import { RecentTransactionsSection } from '@/components/RecentTransactionsSection';
@@ -33,7 +33,7 @@ const Dashboard = () => {
       const monthEnd = endOfMonth(monthStart);
       const monthTxs = txs.filter(tx => {
         const txDate = new Date(tx.date);
-        return isWithinInterval(txDate, { start: monthStart, end: monthEnd }) &&
+        return txDate >= monthStart && txDate <= monthEnd &&
           (businessView === 'all' || tx.category === businessView);
       });
       const income = monthTxs.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);

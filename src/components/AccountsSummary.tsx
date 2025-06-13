@@ -2,6 +2,7 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Wallet, CreditCard, Building, DollarSign } from 'lucide-react';
+import { useAccountData } from '@/hooks/useAccountData';
 
 interface AccountCardProps {
   title: string;
@@ -31,8 +32,6 @@ const AccountCard: React.FC<AccountCardProps> = ({ title, balance, icon, color, 
     </Card>
   );
 };
-
-import { useAccountData } from '@/hooks/useAccountData';
 
 export const AccountsSummary = () => {
   const { accounts, isLoading, error } = useAccountData();
@@ -115,7 +114,7 @@ export const AccountsSummary = () => {
       {accounts.map((account, index) => (
         <div key={account.id || index} className="animate-fade-in" style={{ animationDelay: `${index * 80}ms` }}>
           <AccountCard
-            title={account.name || account.title || 'Account'}
+            title={account.name} // Changed from account.title || account.name to just account.name
             balance={Number(account.balance) || 0}
             icon={getAccountIcon(account.type || account.category)}
             color={getAccountColor(account.type || account.category)}

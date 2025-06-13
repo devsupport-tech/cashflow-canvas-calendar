@@ -49,7 +49,12 @@ const Transactions = () => {
     setIsExporting(true);
     
     try {
-      exportTransactionsToCSV(filteredTransactions);
+      // Convert TransactionItem[] to Transaction[] for export
+      const convertedTransactions = filteredTransactions.map(tx => ({
+        ...tx,
+        date: new Date(tx.date)
+      }));
+      exportTransactionsToCSV(convertedTransactions);
       toast({
         title: "Export Completed",
         description: "Your transactions have been exported successfully.",
@@ -182,22 +187,34 @@ const Transactions = () => {
               </div>
             ) : (
               <div className="flex flex-col gap-2">
-                {filteredTransactions.map((tx, idx) => (
-                  <div key={tx.id} className="animate-fade-in" style={{ animationDelay: `${idx * 40}ms` }}>
-                    <TransactionList 
-                      transactions={[tx]} 
-                      onEdit={(transaction) => {
-                        setFormOpen(true);
-                        setEditingTransaction(transaction);
-                      }}
-                      onDelete={async (id) => {
-                        if (window.confirm('Are you sure you want to delete this transaction?')) {
-                          await deleteTransaction(id);
-                        }
-                      }}
-                    />
-                  </div>
-                ))}
+                {filteredTransactions.map((tx, idx) => {
+                  // Convert TransactionItem to Transaction for TransactionList
+                  const convertedTx = {
+                    ...tx,
+                    date: new Date(tx.date)
+                  };
+                  return (
+                    <div key={tx.id} className="animate-fade-in" style={{ animationDelay: `${idx * 40}ms` }}>
+                      <TransactionList 
+                        transactions={[convertedTx]} 
+                        onEdit={(transaction) => {
+                          // Convert back to TransactionItem for editing
+                          const editTx = {
+                            ...transaction,
+                            date: transaction.date.toISOString()
+                          };
+                          setFormOpen(true);
+                          setEditingTransaction(editTx);
+                        }}
+                        onDelete={async (id) => {
+                          if (window.confirm('Are you sure you want to delete this transaction?')) {
+                            await deleteTransaction(id);
+                          }
+                        }}
+                      />
+                    </div>
+                  );
+                })}
               </div>
             )}
           </TabsContent>
