@@ -18,7 +18,7 @@ const Budgets = () => {
   const [addBudgetOpen, setAddBudgetOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
-  const [editBudgetId, setEditBudgetId] = useState<string | null>(null);
+  const [editBudgetId, setEditBudgetId] = useState<number | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     amount: '',
@@ -39,7 +39,7 @@ const Budgets = () => {
   const percentSpent = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
   
   const handleEditBudget = (budget: any) => {
-    setEditBudgetId(budget.id);
+    setEditBudgetId(parseInt(budget.id, 10));
     setFormData({
       name: budget.name,
       amount: budget.amount?.toString() ?? '',

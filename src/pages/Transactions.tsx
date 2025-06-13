@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { MainLayout } from '@/layouts/MainLayout';
 import { TransactionList } from '@/components/TransactionList';
@@ -57,12 +56,8 @@ const Transactions = () => {
     setIsExporting(true);
     
     try {
-      // Convert string dates to Date objects for export
-      const exportTransactions = filteredTransactions.map(tx => ({
-        ...tx,
-        date: new Date(tx.date)
-      }));
-      exportTransactionsToCSV(exportTransactions);
+      // Keep dates as strings for export since Transaction interface expects string dates
+      exportTransactionsToCSV(filteredTransactions);
       toast({
         title: "Export Completed",
         description: "Your transactions have been exported successfully.",
