@@ -1,9 +1,16 @@
 
 import { useState, useEffect } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/auth';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
-import { supabase } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { toast } from '@/components/ui/use-toast';
+import { Transaction } from '@/lib/types';
+
+// Type alias for consistency with existing code
+type TransactionItem = Transaction & {
+  created_at: string;
+};
 
 // Local storage key for caching transactions
 const TRANSACTIONS_CACHE_KEY = 'cashflow_transactions_cache';
@@ -146,34 +153,126 @@ export const useTransactionData = () => {
   }, [isSupabaseConfigured, loadCachedData, saveToCache]);
 
   // Add new transaction with optimistic updates
-  const addTransaction = async (transaction: Omit<TransactionItem, 'id' | 'created_at'>) => {
-    const tempId = 'temp-' + Date.now();
-    const newTransaction: TransactionItem = {
-      ...transaction,
-      id: tempId,
-      created_at: new Date().toISOString()
-    };
+  const addTransactionMutation = useMutation({
+    mutationFn: async (transaction: Omit<TransactionItem, 'id' | 'created_at'>) => {
+      const tempId = 'temp-' + Date.now();
+      const newTransaction: TransactionItem = {
+        ...transaction,
+        id: tempId,
+        created_at: new Date().toISOString()
+      };
 
-    // Optimistic update
-    setTransactions(prev => [newTransaction, ...prev]);
+      // Optimistic update
+      setTransactions(prev => [newTransaction, ...prev]);
 
-    try {
-      if (!isSupabaseConfigured) {
-        // In demo mode, just update the ID and save to cache
-        const finalTransaction = { ...newTransaction, id: 'demo-' + Date.now() };
+      try {
+        if (!isSupabaseConfigured) {
+          // In demo mode, just update the ID and save to cache
+          const finalTransaction = { ...newTransaction, id: 'demo-' + Date.now() };
+          setTransactions(prev => 
+            prev.map(t => t.id === tempId ? finalTransaction : t)
+          );
+          saveToCache([finalTransaction, ...transactions.filter(t => t.id !== tempId)]);
+          
+          toast({
+            title: "Success (Demo)",
+            description: "Transaction added successfully in demo mode",
+          });
+          return finalTransaction;
+        }
+        
+        // Handle real Supabase operations here
+        const { data, error } = await supabase
+          .from('transactions')
+          .insert([transaction])
+          .select()
+          .single();
+          
+        if (error) throw error;
+        
+        // Update with real data
+        const finalTransaction = data as TransactionItem;
         setTransactions(prev => 
           prev.map(t => t.id === tempId ? finalTransaction : t)
         );
         saveToCache([finalTransaction, ...transactions.filter(t => t.id !== tempId)]);
         
         toast({
-          title: "Success (Demo)",
-          description: "Transaction added successfully in demo mode",
+          title: "Success",
+          description: "Transaction added successfully",
         });
         return finalTransaction;
+        
+      } catch (error) {
+        // Revert optimistic update on error
+        setTransactions(prev => prev.filter(t => t.id !== tempId));
+        throw error;
       }
-      });
     },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to add transaction: " + (error as Error).message,
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Update transaction
+  const updateTransactionMutation = useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: Partial<TransactionItem> }) => {
+      // Optimistic update
+      const previousTransactions = transactions;
+      setTransactions(prev => 
+        prev.map(t => t.id === id ? { ...t, ...updates } : t)
+      );
+
+      try {
+        if (!isSupabaseConfigured) {
+          // In demo mode, just save to cache
+          const updatedTransactions = transactions.map(t => 
+            t.id === id ? { ...t, ...updates } : t
+          );
+          saveToCache(updatedTransactions);
+          
+          toast({
+            title: "Success (Demo)",
+            description: "Transaction updated successfully in demo mode",
+          });
+          return;
+        }
+        
+        const { error } = await supabase
+          .from('transactions')
+          .update(updates)
+          .eq('id', id);
+          
+        if (error) throw error;
+        
+        // Save to cache
+        const updatedTransactions = transactions.map(t => 
+          t.id === id ? { ...t, ...updates } : t
+        );
+        saveToCache(updatedTransactions);
+        
+        toast({
+          title: "Success",
+          description: "Transaction updated successfully",
+        });
+        
+      } catch (error) {
+        // Revert optimistic update on error
+        setTransactions(previousTransactions);
+        throw error;
+      }
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update transaction: " + (error as Error).message,
+        variant: "destructive",
+      });
+    }
   });
 
   // Delete transaction
