@@ -3,125 +3,175 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { supabase } from '@/lib/supabase';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/components/ui/use-toast';
 
-export interface TransactionItem {
-  id: string;
-  amount: number;
-  description: string;
-  date: string;
-  type: string;
-  category?: string;
-  expenseType?: string;
-  tags?: string[];
+// Local storage key for caching transactions
+const TRANSACTIONS_CACHE_KEY = 'cashflow_transactions_cache';
+const CACHE_EXPIRY_MS = 5 * 60 * 1000; // 5 minutes
+
+interface CachedData {
+  data: TransactionItem[];
+  timestamp: number;
 }
 
 export const useTransactionData = () => {
-  const { user } = useAuth();
-  const { currentWorkspace } = useWorkspace();
-  const queryClient = useQueryClient();
+  const [transactions, setTransactions] = useState<TransactionItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [lastSync, setLastSync] = useState<Date | null>(null);
 
-  // Fetch transactions from Supabase
-  const fetchTransactions = async (): Promise<TransactionItem[]> => {
-    if (!user) return [];
+  // Load cached data from localStorage
+  const loadCachedData = useCallback(() => {
     try {
-      let query = supabase
-        .from('transactions')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('date', { ascending: false });
+      const cached = localStorage.getItem(TRANSACTIONS_CACHE_KEY);
+      if (cached) {
+        const { data, timestamp }: CachedData = JSON.parse(cached);
+        const isExpired = Date.now() - timestamp > CACHE_EXPIRY_MS;
+        
+        if (!isExpired) {
+          console.log('📱 Loading cached transactions:', data.length);
+          setTransactions(data);
+          setLastSync(new Date(timestamp));
+          return true;
+        } else {
+          console.log('⏰ Cache expired, will fetch fresh data');
+          localStorage.removeItem(TRANSACTIONS_CACHE_KEY);
+        }
+      }
+    } catch (error) {
+      console.warn('⚠️ Error loading cached transactions:', error);
+      localStorage.removeItem(TRANSACTIONS_CACHE_KEY);
+    }
+    return false;
+  }, []);
 
-      if (currentWorkspace !== 'all') {
-        query = query.eq('category', currentWorkspace);
+  // Save data to cache
+  const saveToCache = useCallback((data: TransactionItem[]) => {
+    try {
+      const cacheData: CachedData = {
+        data,
+        timestamp: Date.now()
+      };
+      localStorage.setItem(TRANSACTIONS_CACHE_KEY, JSON.stringify(cacheData));
+      setLastSync(new Date());
+    } catch (error) {
+      console.warn('⚠️ Error saving transactions to cache:', error);
+    }
+  }, []);
+
+  // Fetch transactions from Supabase with improved error handling
+  const fetchTransactions = useCallback(async (showToast = false) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      if (!isSupabaseConfigured) {
+        console.log('🔄 Using demo mode - loading mock transactions');
+        const mockTransactions: TransactionItem[] = [
+          {
+            id: 'demo-1',
+            description: 'Demo Income',
+            amount: 5000,
+            type: 'income',
+            date: new Date().toISOString(),
+            category: 'personal',
+            created_at: new Date().toISOString()
+          },
+          {
+            id: 'demo-2',
+            description: 'Demo Expense',
+            amount: 150,
+            type: 'expense',
+            date: new Date(Date.now() - 86400000).toISOString(), // Yesterday
+            category: 'personal',
+            created_at: new Date(Date.now() - 86400000).toISOString()
+          }
+        ];
+        setTransactions(mockTransactions);
+        saveToCache(mockTransactions);
+        setIsLoading(false);
+        return;
       }
 
-      const { data, error } = await query;
-      if (error) throw error;
-      return (data || []).map((tx: any) => ({
-        id: tx.id,
-        amount: tx.amount,
-        description: tx.description,
-        date: tx.date,
-        type: tx.type,
-        category: tx.category,
-        expenseType: tx.expense_type,
-        tags: tx.tags || [],
-      }));
-    } catch (error) {
-      toast({
-        title: 'Failed to load transactions',
-        description: 'There was an error loading your transactions. Please refresh the page.',
-        variant: 'destructive',
-      });
-      return [];
+      const { data, error: fetchError } = await supabase
+        .from('transactions')
+        .select('*')
+        .order('date', { ascending: false });
+
+      if (fetchError) {
+        console.error('❌ Error fetching transactions:', fetchError);
+        setError(fetchError.message);
+        
+        // Try to use cached data if available
+        const hasCached = loadCachedData();
+        if (!hasCached && showToast) {
+          toast({
+            title: "Connection Error",
+            description: "Failed to fetch transactions. Using offline data if available.",
+            variant: "destructive",
+            duration: 5000,
+          });
+        }
+        return;
+      }
+
+      const transactionData = data || [];
+      setTransactions(transactionData);
+      saveToCache(transactionData);
+      
+      if (showToast && transactionData.length > 0) {
+        toast({
+          title: "Data Synced",
+          description: `Loaded ${transactionData.length} transactions`,
+          duration: 2000,
+        });
+      }
+    } catch (err: any) {
+      console.error('💥 Error in fetchTransactions:', err);
+      setError(err.message || 'Failed to fetch transactions');
+      
+      // Fallback to cached data
+      const hasCached = loadCachedData();
+      if (!hasCached && showToast) {
+        toast({
+          title: "Error",
+          description: "Failed to load transactions. Please check your connection.",
+          variant: "destructive",
+          duration: 5000,
+        });
+      }
+    } finally {
+      setIsLoading(false);
     }
-  };
+  }, [isSupabaseConfigured, loadCachedData, saveToCache]);
 
-  const { data: transactions = [], isLoading, error } = useQuery({
-    queryKey: ['transactions', user?.id, currentWorkspace],
-    queryFn: fetchTransactions,
-    enabled: !!user,
-  });
+  // Add new transaction with optimistic updates
+  const addTransaction = async (transaction: Omit<TransactionItem, 'id' | 'created_at'>) => {
+    const tempId = 'temp-' + Date.now();
+    const newTransaction: TransactionItem = {
+      ...transaction,
+      id: tempId,
+      created_at: new Date().toISOString()
+    };
 
-  // Add transaction
-  const addTransactionMutation = useMutation({
-    mutationFn: async (tx: Omit<TransactionItem, 'id'>) => {
-      if (!user) throw new Error('User not authenticated');
-      const { data, error } = await supabase
-        .from('transactions')
-        .insert({
-          ...tx,
-          user_id: user.id,
-          expense_type: tx.expenseType,
-          created_at: new Date().toISOString(),
-        })
-        .select();
-      if (error) throw error;
-      return data[0];
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['transactions', user?.id, currentWorkspace] });
-      toast({ title: 'Transaction added', description: 'Your transaction was added successfully.' });
-    },
-    onError: (error: any) => {
-      toast({
-        title: 'Failed to add transaction',
-        description: error.message || 'Could not add transaction.',
-        variant: 'destructive',
-      });
-    },
-  });
+    // Optimistic update
+    setTransactions(prev => [newTransaction, ...prev]);
 
-  // Update transaction
-  const updateTransactionMutation = useMutation({
-    mutationFn: async (tx: TransactionItem) => {
-      if (!user) throw new Error('User not authenticated');
-      const { error } = await supabase
-        .from('transactions')
-        .update({
-          amount: tx.amount,
-          description: tx.description,
-          date: tx.date,
-          type: tx.type,
-          category: tx.category,
-          expense_type: tx.expenseType,
-          tags: tx.tags,
-        })
-        .eq('id', tx.id)
-        .eq('user_id', user.id);
-      if (error) throw error;
-      return tx;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['transactions', user?.id, currentWorkspace] });
-      toast({ title: 'Transaction updated', description: 'Your transaction was updated.' });
-    },
-    onError: (error: any) => {
-      toast({
-        title: 'Failed to update transaction',
-        description: error.message || 'Could not update transaction.',
-        variant: 'destructive',
+    try {
+      if (!isSupabaseConfigured) {
+        // In demo mode, just update the ID and save to cache
+        const finalTransaction = { ...newTransaction, id: 'demo-' + Date.now() };
+        setTransactions(prev => 
+          prev.map(t => t.id === tempId ? finalTransaction : t)
+        );
+        saveToCache([finalTransaction, ...transactions.filter(t => t.id !== tempId)]);
+        
+        toast({
+          title: "Success (Demo)",
+          description: "Transaction added successfully in demo mode",
+        });
+        return finalTransaction;
+      }
       });
     },
   });
