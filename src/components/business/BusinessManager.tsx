@@ -30,8 +30,7 @@ export const BusinessManager = () => {
     try {
       await addBusiness({ 
         name: newBusinessName.trim(), 
-        color: selectedColor,
-        createdAt: new Date().toISOString()
+        color: selectedColor
       });
       toast({
         title: "Business created",

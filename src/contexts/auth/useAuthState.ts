@@ -174,56 +174,6 @@ export function useAuthState() {
       subscription?.unsubscribe?.();
     };
   }, []);
-          
-          console.log("User signed in:", authUser.id);
-          
-          // Try to get user profile data, but don't fail if table doesn't exist
-          let profile = null;
-          try {
-            const { data: profileData } = await supabase
-              .from('user_profiles')
-              .select('*')
-              .eq('id', authUser.id)
-              .single();
-            profile = profileData;
-          } catch (profileError) {
-            console.warn('Profile table does not exist or profile not found, using auth data only');
-          }
-            
-          setUser({
-            id: authUser.id,
-            email: authUser.email || '',
-            name: profile?.name || authUser.email?.split('@')[0] || '',
-            avatarUrl: profile?.avatar_url || undefined,
-          });
-          
-          // Show success toast
-          toast({
-            title: "Login successful",
-            description: "Welcome back!",
-          });
-          
-          // Get the intended destination from state, or default to home
-          const from = (location.state as any)?.from || '/';
-          console.log('Auth listener - Redirecting to:', from);
-          navigate(from, { replace: true });
-        } catch (error) {
-          console.error('Error setting user data:', error);
-        } finally {
-          setIsLoading(false);
-        }
-      } else if (event === 'SIGNED_OUT') {
-        console.log("User signed out");
-        setUser(null);
-        setIsLoading(false);
-        navigate('/login', { replace: true });
-      }
-    });
-
-    return () => {
-      data?.subscription?.unsubscribe();
-    };
-  }, [navigate, location]);
 
   return { 
     user, 

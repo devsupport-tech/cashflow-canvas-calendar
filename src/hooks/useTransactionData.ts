@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/auth';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
