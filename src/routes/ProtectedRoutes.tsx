@@ -29,7 +29,17 @@ export const PublicOnlyRoute = ({ children }: { children: React.ReactNode }) => 
   
   // Check if the user is already authenticated through local storage
   // This is a quick check before the full auth state is loaded
-  const isAuthenticated = localStorage.getItem('supabase.auth.token') !== null;
+  const isAuthenticated = (() => {
+    try {
+      const stored = localStorage.getItem('cashflow_user');
+      if (stored) return true;
+      // Fallback for Supabase persisted session
+      const supabaseToken = localStorage.getItem('supabase.auth.token');
+      return supabaseToken !== null;
+    } catch {
+      return false;
+    }
+  })();
   
   if (isAuthenticated) {
     console.log("PublicOnlyRoute - User already authenticated, redirecting to:", from);

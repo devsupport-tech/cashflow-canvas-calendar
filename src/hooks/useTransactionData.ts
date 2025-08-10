@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/auth';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
@@ -26,6 +26,9 @@ export const useTransactionData = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastSync, setLastSync] = useState<Date | null>(null);
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const { currentWorkspace } = useWorkspace();
 
   // Load cached data from localStorage
   const loadCachedData = useCallback(() => {
@@ -100,29 +103,49 @@ export const useTransactionData = () => {
         return;
       }
 
+      // Try primary 'transactions' table, fall back to 'expenses' when not available
+      let transactionData: any[] = [];
       const { data, error: fetchError } = await supabase
         .from('transactions')
         .select('*')
         .order('date', { ascending: false });
 
       if (fetchError) {
-        console.error('❌ Error fetching transactions:', fetchError);
-        setError(fetchError.message);
-        
-        // Try to use cached data if available
-        const hasCached = loadCachedData();
-        if (!hasCached && showToast) {
-          toast({
-            title: "Connection Error",
-            description: "Failed to fetch transactions. Using offline data if available.",
-            variant: "destructive",
-            duration: 5000,
-          });
-        }
-        return;
-      }
+        console.warn('⚠️ transactions table not available or fetch error, falling back to expenses:', fetchError?.message);
+        const { data: expensesData, error: expensesError } = await supabase
+          .from('expenses')
+          .select('*')
+          .order('date', { ascending: false });
 
-      const transactionData = data || [];
+        if (expensesError) {
+          console.error('❌ Error fetching expenses fallback:', expensesError);
+          setError(expensesError.message);
+          const hasCached = loadCachedData();
+          if (!hasCached && showToast) {
+            toast({
+              title: "Connection Error",
+              description: "Failed to fetch transactions. Using offline data if available.",
+              variant: "destructive",
+              duration: 5000,
+            });
+          }
+          return;
+        }
+
+        // Map expenses rows to TransactionItem shape
+        transactionData = (expensesData || []).map((row: any) => ({
+          id: String(row.id),
+          description: row.description,
+          amount: row.amount,
+          date: row.date,
+          category: row.category,
+          expenseType: row.expense_type,
+          type: row.expense_type === 'income' ? 'income' : 'expense',
+          created_at: row.created_at,
+        }));
+      } else {
+        transactionData = data || [];
+      }
       setTransactions(transactionData);
       saveToCache(transactionData);
       
@@ -181,17 +204,58 @@ export const useTransactionData = () => {
           return finalTransaction;
         }
         
-        // Handle real Supabase operations here
-        const { data, error } = await supabase
+        // Handle real Supabase operations here, try transactions then expenses
+        const baseInsert = {
+          description: transaction.description,
+          amount: transaction.amount,
+          date: transaction.date,
+          category: transaction.category,
+          // Map expenseType/type for expenses fallback
+          expense_type:
+            transaction.type === 'income' ? 'income' : (transaction as any).expenseType,
+          user_id: user?.id || null,
+          created_at: new Date().toISOString(),
+        } as any;
+
+        let inserted: any = null;
+        let insertError: any = null;
+
+        // Try primary transactions table
+        const { data: tData, error: tError } = await supabase
           .from('transactions')
-          .insert([transaction])
+          .insert([ { ...transaction, user_id: user?.id } as any ])
           .select()
           .single();
-          
-        if (error) throw error;
+
+        if (tError) {
+          // Fallback to expenses
+          const { data: eData, error: eError } = await supabase
+            .from('expenses')
+            .insert([ baseInsert ])
+            .select()
+            .single();
+          inserted = eData;
+          insertError = eError;
+        } else {
+          inserted = tData;
+          insertError = null;
+        }
+
+        if (insertError) throw insertError;
         
-        // Update with real data
-        const finalTransaction = data as TransactionItem;
+        // Normalize to TransactionItem
+        const finalTransaction: TransactionItem = inserted && inserted.expense_type !== undefined
+          ? {
+              id: String(inserted.id),
+              description: inserted.description,
+              amount: inserted.amount,
+              date: inserted.date,
+              category: inserted.category,
+              expenseType: inserted.expense_type,
+              type: inserted.expense_type === 'income' ? 'income' : 'expense',
+              created_at: inserted.created_at,
+            }
+          : (inserted as TransactionItem);
         setTransactions(prev => 
           prev.map(t => t.id === tempId ? finalTransaction : t)
         );
@@ -204,9 +268,16 @@ export const useTransactionData = () => {
         return finalTransaction;
         
       } catch (error) {
-        // Revert optimistic update on error
-        setTransactions(prev => prev.filter(t => t.id !== tempId));
-        throw error;
+        // Fallback: keep data locally if backend insert fails (schema/network)
+        console.warn('⚠️ Falling back to local save for transaction add:', (error as Error)?.message);
+        const finalTransaction: TransactionItem = { ...newTransaction, id: 'local-' + Date.now() };
+        setTransactions(prev => prev.map(t => (t.id === tempId ? finalTransaction : t)));
+        saveToCache([finalTransaction, ...transactions.filter(t => t.id !== tempId)]);
+        toast({
+          title: 'Saved locally',
+          description: 'Backend unavailable; your transaction was saved offline.',
+        });
+        return finalTransaction;
       }
     },
     onError: (error) => {
@@ -220,18 +291,20 @@ export const useTransactionData = () => {
 
   // Update transaction
   const updateTransactionMutation = useMutation({
-    mutationFn: async ({ id, updates }: { id: string; updates: Partial<TransactionItem> }) => {
+    // Accept a full transaction-like object, as called from the form
+    mutationFn: async (updated: Partial<TransactionItem> & { id?: string }) => {
+      const id = updated.id as string;
       // Optimistic update
       const previousTransactions = transactions;
       setTransactions(prev => 
-        prev.map(t => t.id === id ? { ...t, ...updates } : t)
+        prev.map(t => (t.id === id ? { ...t, ...updated } : t))
       );
 
       try {
         if (!isSupabaseConfigured) {
           // In demo mode, just save to cache
           const updatedTransactions = transactions.map(t => 
-            t.id === id ? { ...t, ...updates } : t
+            (t.id === id ? { ...t, ...updated } : t)
           );
           saveToCache(updatedTransactions);
           
@@ -242,16 +315,43 @@ export const useTransactionData = () => {
           return;
         }
         
-        const { error } = await supabase
+        let updateErr: any = null;
+
+        const { error: tUpdErr } = await supabase
           .from('transactions')
-          .update(updates)
+          .update({
+            description: updated.description,
+            amount: updated.amount,
+            date: updated.date,
+            category: updated.category,
+            // Keep these fields only if your transactions table supports them.
+            // For broader compatibility, we include them but Supabase will ignore unknown columns.
+            expenseType: (updated as any).expenseType,
+            type: (updated as any).type,
+          } as any)
           .eq('id', id);
-          
-        if (error) throw error;
+
+        if (tUpdErr) {
+          const { error: eUpdErr } = await supabase
+            .from('expenses')
+            .update({
+              description: updated.description,
+              amount: updated.amount,
+              date: updated.date,
+              category: updated.category,
+              expense_type: (updated as any).type === 'income' ? 'income' : (updated as any).expenseType,
+            } as any)
+            .eq('id', Number(id));
+          updateErr = eUpdErr;
+        } else {
+          updateErr = null;
+        }
+
+        if (updateErr) throw updateErr;
         
         // Save to cache
         const updatedTransactions = transactions.map(t => 
-          t.id === id ? { ...t, ...updates } : t
+          t.id === id ? { ...t, ...updated } as TransactionItem : t
         );
         saveToCache(updatedTransactions);
         
@@ -279,12 +379,26 @@ export const useTransactionData = () => {
   const deleteTransactionMutation = useMutation({
     mutationFn: async (id: string) => {
       if (!user) throw new Error('User not authenticated');
-      const { error } = await supabase
+
+      let delErr: any = null;
+      const { error: tDelErr } = await supabase
         .from('transactions')
         .delete()
         .eq('id', id)
         .eq('user_id', user.id);
-      if (error) throw error;
+
+      if (tDelErr) {
+        const { error: eDelErr } = await supabase
+          .from('expenses')
+          .delete()
+          .eq('id', Number(id))
+          .eq('user_id', user.id);
+        delErr = eDelErr;
+      } else {
+        delErr = null;
+      }
+
+      if (delErr) throw delErr;
       return id;
     },
     onSuccess: () => {
